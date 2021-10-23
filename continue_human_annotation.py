@@ -149,11 +149,14 @@ for iii in range(0,len(name_list)):
     im_resized = cv2.resize(im, (int(im.shape[1]*lng_ratio/lat_ratio ),im.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
     im_resized_copy = im_resized.copy()
 
+    p_dic = pickle.load(open(root_folder_path + name_list[iii] + "_1.pickle", "rb"))
 
+    pos_list = p_dic['pos_list']
+    angle_list = p_dic['angle_list']
 
-    p_dic = pickle.load( open( root_folder_path + name_list[iii] +".pickle", "rb" ) )
+    p_dic = pickle.load(open(root_folder_path + name_list[iii] + ".pickle", "rb"))
 
-    angle = p_dic['angle']
+    angle = angle_list[-1]
     routes = p_dic['google_direction_route']
     starting_gps = p_dic['starting_gps']
     starting_gps = np.array(starting_gps)
@@ -165,25 +168,21 @@ for iii in range(0,len(name_list)):
     # cv2.setMouseCallback("navigation viewer", zoom_in_out)
 
     # end_of_route = 0q
-    size_of_view = min_view
-    _gps_coord_top_left = [get_a_gps_coord_at_distance(starting_gps[0], size_of_view[1]/2), get_a_gps_coord_at_distance(starting_gps[1], -size_of_view[0]/2)]
-    _gps_coord_bot_right = [get_a_gps_coord_at_distance(starting_gps[0], -size_of_view[1]/2), get_a_gps_coord_at_distance(starting_gps[1], size_of_view[0]/2)]
+    # size_of_view = min_view
+    # _gps_coord_top_left = [get_a_gps_coord_at_distance(starting_gps[0], size_of_view[1] / 2),
+    #                        get_a_gps_coord_at_distance(starting_gps[1], -size_of_view[0] / 2)]
+    # _gps_coord_bot_right = [get_a_gps_coord_at_distance(starting_gps[0], -size_of_view[1] / 2),
+    #                         get_a_gps_coord_at_distance(starting_gps[1], size_of_view[0] / 2)]
+    #
+    # _im_coords_top_left = gps_to_img_coords(_gps_coord_top_left)
+    # _im_coords_bot_right = gps_to_img_coords(_gps_coord_bot_right)
 
-    _im_coords_top_left = gps_to_img_coords(_gps_coord_top_left)
-    _im_coords_bot_right = gps_to_img_coords(_gps_coord_bot_right)
+    step_change_of_view_zoom = np.array(
+        [get_a_gps_coord_at_distance(0, 16 / 2) / lat_ratio, get_a_gps_coord_at_distance(0, 9 / 2) / lat_ratio])
 
+    step_change_of_view_move = get_a_gps_coord_at_distance(0, 10) / lat_ratio
 
-
-    step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, 16/ 2)/lat_ratio, get_a_gps_coord_at_distance(0, 9/ 2)/lat_ratio])
-
-    step_change_of_view_move = get_a_gps_coord_at_distance(0, 10)/lat_ratio
-
-    corners = [
-        np.array(_im_coords_top_left),
-        np.array([_im_coords_bot_right[0], _im_coords_top_left[1]]),
-        np.array(_im_coords_bot_right),
-        np.array([_im_coords_top_left[0], _im_coords_bot_right[1]])
-    ]# clock wise
+    corners = pos_list[-1]
 
     # angle = 0
     width = 1280
@@ -192,7 +191,6 @@ for iii in range(0,len(name_list)):
                         [width - 1, 0],
                         [width - 1, height - 1],
                         [0, height - 1]], dtype="float32")
-
 
     mean_im_coords = np.mean(corners, axis=0)
     _corners = [
@@ -220,12 +218,9 @@ for iii in range(0,len(name_list)):
     # directly warp the rotated rectangle to get the straightened rectangle
     im_view = cv2.warpPerspective(im_resized, M, (width, height))
 
-    angle_list = []
-    pos_list = []
     compass_pos = 100
     compass_size = 50
     count_frame = 0
-
 
     while True:
         count_frame += 1
@@ -284,7 +279,7 @@ for iii in range(0,len(name_list)):
                              'angle_list': angle_list,
                              'question': question,
                              'Approve': approve,
-                             }, open('/Users/fanyue/xview/' + name_list[iii] + '_1.pickle', 'wb'))
+                             }, open('/Users/fanyue/xview/' + name_list[iii] + '_2.pickle', 'wb'))
 
 
 
@@ -601,7 +596,7 @@ for iii in range(0,len(name_list)):
     #                  ),
     #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
 
-    cv2.putText(im_resized_copy, 'Forward direction', (int(center_coord[0]), int(center_coord[1])),
+    cv2.putText(im_resized_copy, 'Forward direction', (int(center_coord[0]) ,int(center_coord[1])),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.1 + size_boundary[0] / 1200, (0, 0, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
     #
@@ -623,9 +618,10 @@ for iii in range(0,len(name_list)):
     #             cv2.FONT_HERSHEY_SIMPLEX,
     #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
 
-    cv2.putText(im_resized_copy, 'current view area', np.array(np.min(pos_list[-1],axis = 0),dtype=np.int32),
+    cv2.putText(im_resized_copy, 'current view area', np.min(pos_list[-1],dtype = np.int32,axis = 0),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 1600, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
+
 
     # print(im_min_boundary[1],im_max_boundary[1], im_min_boundary[0],im_max_boundary[0])
 
@@ -638,7 +634,7 @@ for iii in range(0,len(name_list)):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
 
-    cv2.imwrite(root_folder_path + name_list[iii].replace('/', '/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
+    cv2.imwrite(root_folder_path + name_list[iii].replace('/', '/image_sample_') + '_2.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
 
     gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/image_sample_') + '.jpg', 1)
