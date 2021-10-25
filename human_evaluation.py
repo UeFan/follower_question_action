@@ -51,7 +51,7 @@ def get_a_gps_coord_at_distance(a, b):
 
 
 def gps_to_img_coords(gps):
-    return round((gps[1] - gps_botm_left[1]) / lat_ratio), round((gps_top_right[0] - gps[0]) / lat_ratio)
+    return int(round((gps[1] - gps_botm_left[1]) / lat_ratio)), int(round((gps_top_right[0] - gps[0]) / lat_ratio))
 
 
 
@@ -85,7 +85,7 @@ with open(fname) as f:
 
 
 
-df = pd.read_csv('/Users/fanyue/Downloads/Batch_4582824_batch_results.csv')
+df = pd.read_csv('/Users/fanyue/Downloads/Batch_4583698_batch_results.csv')
 
 name_list = []
 for i in df['Input.task_image_name']:
@@ -220,6 +220,7 @@ for iii in range(0,len(name_list)):
     # directly warp the rotated rectangle to get the straightened rectangle
     im_view = cv2.warpPerspective(im_resized, M, (width, height))
 
+    action_list = []
     angle_list = []
     pos_list = []
     compass_pos = 100
@@ -267,24 +268,43 @@ for iii in range(0,len(name_list)):
 
         cv2.imshow('navigation viewer', im_view)
         k = cv2.waitKey(0)
-
+        action_list.append(k)
 
         if k == 27:
             approve = ''
-            print('====== ', iii, ' =====')
+            print('====== You have pressed ESC for task #', iii, ' =====')
             question = input('Enter your question. Or input x to reject. Or input y to claim the destination.\n')
 
             print ('\n[pickle saved] You just input: \n',question)
+
+
+
             if question == 'x':
                 approve = 'Poor quality'
+                pos_list = [corners]
             else:
-                approve = 'X'
-                # print(question)
-                pickle.dump({'pos_list': pos_list,
-                             'angle_list': angle_list,
-                             'question': question,
-                             'Approve': approve,
-                             }, open('/Users/fanyue/xview/' + name_list[iii] + '_1.pickle', 'wb'))
+                starting_pix_dis_to_des = np.linalg.norm(
+                    np.array(starting_coord) - np.array(gps_to_img_coords(destination_gps)))
+                ending_pix_dis_to_des = np.linalg.norm(
+                    np.array(np.mean(pos_list[-1], axis = 1)) - np.array(gps_to_img_coords(destination_gps)))
+                if starting_pix_dis_to_des < ending_pix_dis_to_des-100:
+                    question = 'x '+question
+                    approve = 'Poor quality'
+                else:
+                    approve = 'X'
+
+            pickle.dump({'action_list': action_list,
+                         'pos_list': pos_list,
+                         'angle_list': angle_list,
+                         'question': question,
+                         'Approve': approve,
+                         'step_change_of_view_zoom':step_change_of_view_zoom,
+                         'step_change_of_view_move':step_change_of_view_move,
+                         'lat_ratio':lat_ratio,
+                         'lng_ratio':lng_ratio,
+                         'gps_botm_left':gps_botm_left,
+                         'gps_top_right':gps_top_right
+                         }, open('/Users/fanyue/xview/' + name_list[iii] + '_1.pickle', 'wb'))
 
 
 

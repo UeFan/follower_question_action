@@ -51,7 +51,8 @@ def get_a_gps_coord_at_distance(a, b):
 
 
 def gps_to_img_coords(gps):
-    return round((gps[1] - gps_botm_left[1]) / lat_ratio), round((gps_top_right[0] - gps[0]) / lat_ratio)
+    return int(round((gps[1] - gps_botm_left[1]) / lat_ratio)), int(round((gps_top_right[0] - gps[0]) / lat_ratio))
+
 
 
 
@@ -78,12 +79,12 @@ def change_corner(cs, change): # corners = cs
 
     return new_cs
 
-fname = '/Users/fanyue/xview/xView_train.geojson'
-
-with open(fname) as f:
-    data = json.load(f)
-
-
+# fname = '/Users/fanyue/xview/xView_train.geojson'
+#
+# with open(fname) as f:
+#     data = json.load(f)
+#
+#
 
 df = pd.read_csv('/Users/fanyue/Downloads/Batch_4582824_batch_results.csv')
 
@@ -117,44 +118,48 @@ for iii in range(0,len(name_list)):
     # Lines = file1.readlines()
 
 
-    complete_instruction = df['Answer.tag'][iii]
-    print ('\n Instruction: ',complete_instruction)
+
     ### Get the boundary coords. The gps coords will be lat,long
 
 
     # calculate the coordinate for the edge
-    bb_list = []
-    for i in range(len(data['features'])):
-        if (data['features'][i]['properties']['image_id'] == img_name):
-            bb_list.append([i, data['features'][i]['properties']['type_id']])
-
-    _gps_coord = np.array(data['features'][bb_list[6][0]]['geometry']['coordinates'])
-    gps_coord_0 = np.min(_gps_coord, axis=1)[0]
-
-    _gps_coord = np.array(data['features'][bb_list[-6][0]]['geometry']['coordinates'])
-    gps_coord_1 = np.max(_gps_coord, axis=1)[0]
-    _im_coords = data['features'][bb_list[6][0]]['properties']['bounds_imcoords'].split(',')
-    im_coords_0 = np.array([int(_im_coords[3]), int(_im_coords[0])])
-
-    _im_coords = data['features'][bb_list[-6][0]]['properties']['bounds_imcoords'].split(',')
-    im_coords_1 = np.array([int(_im_coords[1]), int(_im_coords[2])])
-    lng_ratio = (gps_coord_1[0] - gps_coord_0[0]) / (im_coords_1[1] - im_coords_0[1])
-    lat_ratio = (gps_coord_1[1] - gps_coord_0[1]) / (im_coords_0[0] - im_coords_1[0])
-
-    gps_botm_left = [gps_coord_0[1] - lat_ratio * (im.shape[0] - 1 - im_coords_0[0]),
-                     gps_coord_0[0] - lng_ratio * (im_coords_0[1] - 0)]
-
-    gps_top_right = [gps_botm_left[0] + lat_ratio * im.shape[0], gps_botm_left[1] + lng_ratio * im.shape[1]]
-
-    im_resized = cv2.resize(im, (int(im.shape[1]*lng_ratio/lat_ratio ),im.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
-    im_resized_copy = im_resized.copy()
-
+    # bb_list = []
+    # for i in range(len(data['features'])):
+    #     if (data['features'][i]['properties']['image_id'] == img_name):
+    #         bb_list.append([i, data['features'][i]['properties']['type_id']])
+    #
+    # _gps_coord = np.array(data['features'][bb_list[6][0]]['geometry']['coordinates'])
+    # gps_coord_0 = np.min(_gps_coord, axis=1)[0]
+    #
+    # _gps_coord = np.array(data['features'][bb_list[-6][0]]['geometry']['coordinates'])
+    # gps_coord_1 = np.max(_gps_coord, axis=1)[0]
+    # _im_coords = data['features'][bb_list[6][0]]['properties']['bounds_imcoords'].split(',')
+    # im_coords_0 = np.array([int(_im_coords[3]), int(_im_coords[0])])
+    #
+    # _im_coords = data['features'][bb_list[-6][0]]['properties']['bounds_imcoords'].split(',')
+    # im_coords_1 = np.array([int(_im_coords[1]), int(_im_coords[2])])
+    # lng_ratio = (gps_coord_1[0] - gps_coord_0[0]) / (im_coords_1[1] - im_coords_0[1])
+    # lat_ratio = (gps_coord_1[1] - gps_coord_0[1]) / (im_coords_0[0] - im_coords_1[0])
+    #
+    # gps_botm_left = [gps_coord_0[1] - lat_ratio * (im.shape[0] - 1 - im_coords_0[0]),
+    #                  gps_coord_0[0] - lng_ratio * (im_coords_0[1] - 0)]
+    #
+    # gps_top_right = [gps_botm_left[0] + lat_ratio * im.shape[0], gps_botm_left[1] + lng_ratio * im.shape[1]]
+    #
     p_dic = pickle.load(open(root_folder_path + name_list[iii] + "_1.pickle", "rb"))
 
     pos_list = p_dic['pos_list']
     angle_list = p_dic['angle_list']
+    action_list = p_dic['action_list']
+    step_change_of_view_zoom = p_dic['step_change_of_view_zoom']
+    step_change_of_view_move = p_dic['step_change_of_view_move']
+    lng_ratio = p_dic['lng_ratio']
+    lat_ratio = p_dic['lat_ratio']
+    gps_botm_left = p_dic['gps_botm_left']
+    gps_top_right = p_dic['gps_top_right']
 
-    p_dic = pickle.load(open(root_folder_path + name_list[iii] + ".pickle", "rb"))
+
+
 
     angle = angle_list[-1]
     routes = p_dic['google_direction_route']
@@ -164,6 +169,18 @@ for iii in range(0,len(name_list)):
     destination_gps = extracted_xview_landmarks[int(destination_index)][2]
 
     starting_coord = gps_to_img_coords(starting_gps)
+
+
+
+    complete_instruction = df['Answer.tag'][iii]
+    print ('\n Instruction: ', complete_instruction)
+
+
+
+
+
+    im_resized = cv2.resize(im, (int(im.shape[1]*lng_ratio/lat_ratio ),im.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
+    im_resized_copy = im_resized.copy()
 
     # cv2.setMouseCallback("navigation viewer", zoom_in_out)
 
@@ -177,10 +194,7 @@ for iii in range(0,len(name_list)):
     # _im_coords_top_left = gps_to_img_coords(_gps_coord_top_left)
     # _im_coords_bot_right = gps_to_img_coords(_gps_coord_bot_right)
 
-    step_change_of_view_zoom = np.array(
-        [get_a_gps_coord_at_distance(0, 16 / 2) / lat_ratio, get_a_gps_coord_at_distance(0, 9 / 2) / lat_ratio])
 
-    step_change_of_view_move = get_a_gps_coord_at_distance(0, 10) / lat_ratio
 
     corners = pos_list[-1]
 
@@ -262,24 +276,44 @@ for iii in range(0,len(name_list)):
 
         cv2.imshow('navigation viewer', im_view)
         k = cv2.waitKey(0)
-
+        action_list.append(k)
 
         if k == 27:
             approve = ''
-            print('====== ', iii, ' =====')
+            print('====== You have pressed ESC for task #', iii, ' =====')
             question = input('Enter your question. Or input x to reject. Or input y to claim the destination.\n')
 
             print ('\n[pickle saved] You just input: \n',question)
+
+
+
             if question == 'x':
                 approve = 'Poor quality'
+                pos_list = [corners]
             else:
-                approve = 'X'
-                # print(question)
-                pickle.dump({'pos_list': pos_list,
-                             'angle_list': angle_list,
-                             'question': question,
-                             'Approve': approve,
-                             }, open('/Users/fanyue/xview/' + name_list[iii] + '_2.pickle', 'wb'))
+                starting_pix_dis_to_des = np.linalg.norm(
+                    np.array(starting_coord) - np.array(gps_to_img_coords(destination_gps)))
+                ending_pix_dis_to_des = np.linalg.norm(
+                    np.array(np.mean(pos_list[-1], axis = 1)) - np.array(gps_to_img_coords(destination_gps)))
+                if starting_pix_dis_to_des < ending_pix_dis_to_des-100:
+                    question = 'x '+question
+                    approve = 'Poor quality'
+                else:
+                    approve = 'X'
+
+            pickle.dump({'action_list': action_list,
+                         'pos_list': pos_list,
+                         'angle_list': angle_list,
+                         'question': question,
+                         'Approve': approve,
+                         'step_change_of_view_zoom':step_change_of_view_zoom,
+                         'step_change_of_view_move':step_change_of_view_move,
+                         'lat_ratio':lat_ratio,
+                         'lng_ratio':lng_ratio,
+                         'gps_botm_left':gps_botm_left,
+                         'gps_top_right':gps_top_right
+                         }, open('/Users/fanyue/xview/' + name_list[iii] + '_2.pickle', 'wb'))
+
 
 
 
