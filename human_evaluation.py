@@ -275,7 +275,7 @@ for iii in range(0,len(name_list)):
             print('====== You have pressed ESC for task #', iii, ' =====')
             question = input('Enter your question. Or input x to reject. Or input y to claim the destination.\n')
 
-            print ('\n[pickle saved] You just input: \n',question)
+            print ('\n[pickle saved] You just input: \n', question)
 
 
 
@@ -286,7 +286,7 @@ for iii in range(0,len(name_list)):
                 starting_pix_dis_to_des = np.linalg.norm(
                     np.array(starting_coord) - np.array(gps_to_img_coords(destination_gps)))
                 ending_pix_dis_to_des = np.linalg.norm(
-                    np.array(np.mean(pos_list[-1], axis = 1)) - np.array(gps_to_img_coords(destination_gps)))
+                    np.array(np.mean(pos_list[-1], axis = 0)) - np.array(gps_to_img_coords(destination_gps)))
                 if starting_pix_dis_to_des < ending_pix_dis_to_des-100:
                     question = 'x '+question
                     approve = 'Poor quality'
