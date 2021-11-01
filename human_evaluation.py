@@ -404,7 +404,7 @@ for iii in range(16,len(name_list)):
 
 
             break
-        elif k == ord('o'):
+        elif k == ord('2'):
 
             _new_corners = change_corner(
                 corners,
@@ -432,7 +432,7 @@ for iii in range(16,len(name_list)):
                 # directly warp the rotated rectangle to get the straightened rectangle
                 im_view = cv2.warpPerspective(im_resized, M, (width, height))
 
-        elif k == ord('i'):
+        elif k == ord('1'):
 
             _new_corners = change_corner(
                 corners,
