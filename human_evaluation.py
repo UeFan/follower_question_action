@@ -38,6 +38,9 @@ max_view = np.array([710,400])
 min_view = np.array([71,40])
 # def zoom_in_out(event, x, y, flags, param):b
 
+
+
+
 def polygon_area(points):
     hull = spt.ConvexHull(points=points)
     return hull.area
@@ -78,7 +81,8 @@ def change_corner(cs, change): # corners = cs
 
     return new_cs
 
-fname = '/Users/fanyue/xview/xView_train.geojson'
+
+fname = root_folder_path + 'xView_train.geojson'
 
 with open(fname) as f:
     data = json.load(f)
@@ -95,17 +99,18 @@ for i in df['Input.task_image_name']:
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
 
-for iii in range(0,len(name_list)):
+for iii in range(16,len(name_list)):
 
 
     img_name = name_list[iii].split('/')[0] + '.tif'
-
-    p_dic = pickle.load( open( root_folder_path+name_list[iii].split('/')[0] + '/' +img_name+".pickle", "rb" ) )
+    os.system('mkdir ' + root_folder_path + name_list[iii].split('/')[0] + '/1/')
+    print('folder created')
+    p_dic = pickle.load( open( root_folder_path+name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
 
     extracted_landmarks = p_dic['extracted_landmarks']
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
 
-    path = '/Users/fanyue/xview/train_images/' + img_name
+    path = root_folder_path + 'train_images/' + img_name
     im = cv2.imread(path, 1)
 
 
@@ -151,7 +156,7 @@ for iii in range(0,len(name_list)):
 
 
 
-    p_dic = pickle.load( open( root_folder_path + name_list[iii] +".pickle", "rb" ) )
+    p_dic = pickle.load( open( root_folder_path + name_list[iii].replace('/','/0/') +".pickle", "rb" ) )
 
     angle = p_dic['angle']
     routes = p_dic['google_direction_route']
@@ -223,10 +228,83 @@ for iii in range(0,len(name_list)):
     action_list = []
     angle_list = []
     pos_list = []
+    attention_list = []
     compass_pos = 100
     compass_size = 50
     count_frame = 0
 
+
+    def click_and_draw(event, x, y, flags, param):
+        # grab references to the global variables
+        global refPt, cropping
+        # if the left mouse button was clicked, record the starting
+        # (x, y) coordinates and indicate that cropping is being
+        # performed
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # print(angle, _angle (y/height)*(corners[3][1]-corners[0][1])*np.sin(-angle/ 180 * 3.14159),(x/width)*(corners[1][0]-corners[0][0])*np.sin(angle/ 180 * 3.14159), (x/width)*(corners[1][0]-corners[0][0])*np.cos(angle/ 180 * 3.14159), (y/height)*(corners[3][1]-corners[0][1])*np.cos(angle/ 180 * 3.14159))
+            # ((corners[1][0]-corners[0][0]), (corners[3][1]-corners[0][1])), corners[0],(int((x/width)*(corners[1][0]-corners[0][0])*np.cos(angle)+corners[0][0]), int((y/height)*(corners[3][1]-corners[0][1])*np.cos(angle)+corners[0][1]))
+
+            cv2.circle(im_resized,\
+                       (int((x/width)*np.linalg.norm(corners[1]-corners[0])*np.cos(angle/ 180 * 3.14159) - (y/height)*np.linalg.norm(corners[3]-corners[0])*np.sin(angle/ 180 * 3.14159) +corners[0][0]),\
+                        int((y/height)*np.linalg.norm(corners[3]-corners[0])*np.cos(angle/ 180 * 3.14159)+ (x/width)*np.linalg.norm(corners[1]-corners[0])*np.sin(angle/ 180 * 3.14159) +corners[0][1])),\
+                       int(np.linalg.norm(corners[1]-corners[0])*0.09), (0, 255, 0),
+                       2)
+            im_view = cv2.warpPerspective(im_resized, M, (width, height))
+
+
+
+            cv2.line(im_view, (compass_pos, compass_pos), (int(compass_pos + 20 * np.sin(-angle / 180 * 3.14159)),
+                                                           int(compass_pos - 20 * np.cos(-angle / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'N', (int(compass_pos + compass_size * np.sin(-angle / 180 * 3.14159)),
+                                       int(compass_pos - compass_size * np.cos(-angle / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+            int(compass_pos + 20 * np.sin((-angle + 90) / 180 * 3.14159)),
+            int(compass_pos - 20 * np.cos((-angle + 90) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'E',
+                        (int(compass_pos + compass_size * np.sin((-angle + 90) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 90) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+                int(compass_pos + 20 * np.sin((-angle + 180) / 180 * 3.14159)),
+                int(compass_pos - 20 * np.cos((-angle + 180) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'S',
+                        (int(compass_pos + compass_size * np.sin((-angle + 180) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 180) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+                int(compass_pos + 20 * np.sin((-angle + 270) / 180 * 3.14159)),
+                int(compass_pos - 20 * np.cos((-angle + 270) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'W',
+                        (int(compass_pos + compass_size * np.sin((-angle + 270) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 270) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (int(width / 2 - 85), int(height / 2)), (int(width / 2 + 85), int(height / 2)),
+                     (0, 0, 255), 1)
+
+            cv2.line(im_view, (int(width / 2), int(height / 2 - 85)), (int(width / 2), int(height / 2 + 85)),
+                     (0, 0, 255), 1)
+
+            cv2.imshow('navigation viewer', im_view)
+
+            attention_list.append([(int((x/width)*np.linalg.norm(corners[1]-corners[0])*np.cos(angle/ 180 * 3.14159) - (y/height)*np.linalg.norm(corners[3]-corners[0])*np.sin(angle/ 180 * 3.14159) +corners[0][0]),
+                        int((y/height)*np.linalg.norm(corners[3]-corners[0])*np.cos(angle/ 180 * 3.14159)+ (x/width)*np.linalg.norm(corners[1]-corners[0])*np.sin(angle/ 180 * 3.14159) +corners[0][1])),
+                       int(np.linalg.norm(corners[1]-corners[0])*0.09)])
+
+
+    cv2.setMouseCallback("navigation viewer", click_and_draw)
 
     while True:
         count_frame += 1
@@ -259,15 +337,15 @@ for iii in range(0,len(name_list)):
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-        cv2.line(im_view, (int(width/2-50), int(height/2)), (int(width/2+50), int(height/2)),
+        cv2.line(im_view, (int(width/2-85), int(height/2)), (int(width/2+85), int(height/2)),
                 (0, 0, 255), 1)
 
-        cv2.line(im_view, (int(width / 2), int(height / 2 - 50)), (int(width / 2), int(height / 2 + 50)),
+        cv2.line(im_view, (int(width / 2), int(height / 2 - 85)), (int(width / 2), int(height / 2 + 85)),
                 (0, 0, 255), 1)
-
 
         cv2.imshow('navigation viewer', im_view)
         k = cv2.waitKey(0)
+
         action_list.append(k)
 
         if k == 27:
@@ -281,21 +359,32 @@ for iii in range(0,len(name_list)):
 
             if question == 'x':
                 approve = 'Poor quality'
-                pos_list = [corners]
+                if pos_list == []:
+                    pos_list = [corners]
             else:
                 starting_pix_dis_to_des = np.linalg.norm(
                     np.array(starting_coord) - np.array(gps_to_img_coords(destination_gps)))
                 ending_pix_dis_to_des = np.linalg.norm(
-                    np.array(np.mean(pos_list[-1], axis = 0)) - np.array(gps_to_img_coords(destination_gps)))
-                if starting_pix_dis_to_des < ending_pix_dis_to_des-100:
-                    question = 'x '+question
+                    np.array(np.mean(pos_list[-1], axis=0)) - np.array(gps_to_img_coords(destination_gps)))
+                if starting_pix_dis_to_des < ending_pix_dis_to_des - 100:
+                    question = 'x ' + question
                     approve = 'Poor quality'
+                    print('poor quality.')
                 else:
                     approve = 'X'
+                    if question[0] == 'Y' or question[0] == 'y' or question[1] == 'Y' or question[1] == 'y':
+                        if ending_pix_dis_to_des < 20:
+                            question += "Yes you have find it!!!"
+                            print ("Yes you have find it!!!")
+                        else:
+                            question += "Nope, you haven't get there. Ask some more questions."
+                            print ("Nope, you haven't get there. Ask some more questions.\n")
+                            question = input('Enter your new question.')
 
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
                          'angle_list': angle_list,
+                         'attention_list':attention_list,
                          'question': question,
                          'Approve': approve,
                          'step_change_of_view_zoom':step_change_of_view_zoom,
@@ -304,7 +393,7 @@ for iii in range(0,len(name_list)):
                          'lng_ratio':lng_ratio,
                          'gps_botm_left':gps_botm_left,
                          'gps_top_right':gps_top_right
-                         }, open('/Users/fanyue/xview/' + name_list[iii] + '_1.pickle', 'wb'))
+                         }, open(root_folder_path + name_list[iii].replace('/', '/1/') + '_1.pickle', 'wb'))
 
 
 
@@ -539,8 +628,8 @@ for iii in range(0,len(name_list)):
         mean_im_coords = np.mean(i, axis=0)
         # print(mean_im_coords)
         if(__coords != []):
-            cv2.line(im_resized_copy,(int(mean_im_coords[0]),int(mean_im_coords[1])), __coords[-1],(255, 0, 255),4)
-        __coords.append((int(mean_im_coords[0]),int(mean_im_coords[1])))
+            cv2.line(im_resized_copy,(int(mean_im_coords[0]),int(mean_im_coords[1])), np.array(np.mean(__coords[-1], axis = 0), dtype = np.int32),(255, 0, 255),4)
+        __coords.append(i)
 
         if  _i == len(pos_list):
 
@@ -549,8 +638,13 @@ for iii in range(0,len(name_list)):
                  [int(i[3][0]), int(i[3][1])]])], 0, (255, 255, 255), 1)
         # cv2.rectangle(im_resized_copy, (int(i[0][0]),int(i[0][1])), (int(i[2][0]),int(i[2][1])), (255, 255, 255), 1)
 
+    # print((np.array(__coords,dtype = np.int32),\
+    #     np.array([list(starting_coord)] + [list(gps_to_img_coords((destination_gps)))] + [gps_to_img_coords(i) for i in extracted_xview_landmarks[destination_index][1]])
+    #                   ))
 
-    _gps = np.array(__coords + [list(starting_coord)] + [list(gps_to_img_coords((destination_gps)))] + [gps_to_img_coords(i) for i in extracted_xview_landmarks[destination_index][1]])
+    _gps = np.vstack((np.vstack(__coords),\
+        np.array([list(starting_coord)] + [list(gps_to_img_coords((destination_gps)))] + [gps_to_img_coords(i) for i in extracted_xview_landmarks[destination_index][1]])
+                      ))
 
     im_min_boundary = _gps.min(axis=0)
     im_max_boundary = _gps.max(axis=0)
@@ -624,24 +718,42 @@ for iii in range(0,len(name_list)):
     cv2.putText(im_resized_copy, 'Forward direction', (int(center_coord[0]), int(center_coord[1])),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.1 + size_boundary[0] / 1200, (0, 0, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
+    # angle_ = 0
+    # for k in range(4):
+    #     cv2.line(im_resized_copy, \
+    #              (
+    #                  int(center_coord[0] + compass_size_edge * np.sin((angle_ + k * 90) / 180 * 3.14159)),
+    #                  int(center_coord[1] - compass_size_edge * np.cos((angle_ + k * 90) / 180 * 3.14159))
+    #              ), \
+    #              (
+    #                  int(center_coord[0] + compass_size_center * np.sin((angle_ + k * 90) / 180 * 3.14159)),
+    #                  int(center_coord[1] - compass_size_center * np.cos((angle_ + k * 90) / 180 * 3.14159))
+    #              ), \
+    #              (255, 255, 255), 2 + int(size_boundary[0] / 400))
     #
-    # cv2.putText(im_resized_copy, '3',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 90) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 90) / 180 * 3.14159))),
+    # cv2.putText(im_resized_copy, 'N', (int(center_coord[0] + compass_size * np.sin(angle_ / 180 * 3.14159) * 0.95),
+    #                          int(center_coord[1] - compass_size * np.cos(angle_ / 180 * 3.14159))),
     #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
+    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
     #
-    # cv2.putText(im_resized_copy, '6',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 180) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 180) / 180 * 3.14159))),
+    # cv2.putText(im_resized_copy, 'E',
+    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 90) / 180 * 3.14159)),
+    #              int(center_coord[1] - compass_size * np.cos((angle_ + 90) / 180 * 3.14159))),
     #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
+    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
     #
-    # cv2.putText(im_resized_copy, '9',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 270) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 270) / 180 * 3.14159))),
+    # cv2.putText(im_resized_copy, 'S',
+    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 180) / 180 * 3.14159)),
+    #              int(center_coord[1] - compass_size * np.cos((angle_ + 180) / 180 * 3.14159))),
     #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
+    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
+    #
+    # cv2.putText(im_resized_copy, 'W',
+    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 270) / 180 * 3.14159)),
+    #              int(center_coord[1] - compass_size * np.cos((angle_ + 270) / 180 * 3.14159))),
+    #             cv2.FONT_HERSHEY_SIMPLEX,
+    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
+
 
     cv2.putText(im_resized_copy, 'current view area', np.array(np.min(pos_list[-1],axis = 0),dtype=np.int32),
                 cv2.FONT_HERSHEY_SIMPLEX,
@@ -658,10 +770,10 @@ for iii in range(0,len(name_list)):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
 
-    cv2.imwrite(root_folder_path + name_list[iii].replace('/', '/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
+    cv2.imwrite(root_folder_path + name_list[iii].replace('/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
 
-    gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/image_sample_') + '.jpg', 1)
+    gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/0/image_sample_') + '.jpg', 1)
     # cv2.imshow('GT routes', gt)
     # cv2.waitKey(0)
 cv2.destroyAllWindows()
