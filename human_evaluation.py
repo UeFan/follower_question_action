@@ -89,7 +89,7 @@ with open(fname) as f:
 
 
 
-df = pd.read_csv('/Users/fanyue/Downloads/Batch_4583698_batch_results.csv')
+df = pd.read_csv('/Users/fanyue/Downloads/Batch_4590561_batch_results.csv')
 
 name_list = []
 for i in df['Input.task_image_name']:
@@ -156,7 +156,7 @@ for iii in range(16,len(name_list)):
 
 
 
-    p_dic = pickle.load( open( root_folder_path + name_list[iii].replace('/','/0/') +".pickle", "rb" ) )
+    p_dic = pickle.load( open( root_folder_path + name_list[iii] +".pickle", "rb" ) )
 
     angle = p_dic['angle']
     routes = p_dic['google_direction_route']
@@ -393,7 +393,7 @@ for iii in range(16,len(name_list)):
                          'lng_ratio':lng_ratio,
                          'gps_botm_left':gps_botm_left,
                          'gps_top_right':gps_top_right
-                         }, open(root_folder_path + name_list[iii].replace('/', '/1/') + '_1.pickle', 'wb'))
+                         }, open(root_folder_path + name_list[iii].replace('/0/', '/1/') + '_1.pickle', 'wb'))
 
 
 
@@ -770,10 +770,10 @@ for iii in range(16,len(name_list)):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
 
-    cv2.imwrite(root_folder_path + name_list[iii].replace('/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
+    cv2.imwrite(root_folder_path + name_list[iii].replace('/0/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
 
-    gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/0/image_sample_') + '.jpg', 1)
+    gt = cv2.imread(root_folder_path + name_list[iii].replace('/0/', '/0/image_sample_') + '.jpg', 1)
     # cv2.imshow('GT routes', gt)
     # cv2.waitKey(0)
 cv2.destroyAllWindows()
