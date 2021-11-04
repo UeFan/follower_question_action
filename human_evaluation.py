@@ -99,7 +99,7 @@ for i in df['Input.task_image_name']:
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
 
-for iii in range(16,len(name_list)):
+for iii in range(20,len(name_list)):
 
 
     img_name = name_list[iii].split('/')[0] + '.tif'
@@ -182,6 +182,12 @@ for iii in range(16,len(name_list)):
     step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, 16/ 2)/lat_ratio, get_a_gps_coord_at_distance(0, 9/ 2)/lat_ratio])
 
     step_change_of_view_move = get_a_gps_coord_at_distance(0, 10)/lat_ratio
+
+    # step_change_of_view_zoom = np.array(
+    #     [get_a_gps_coord_at_distance(0,  0.32) / lat_ratio, get_a_gps_coord_at_distance(0, 0.18) / lat_ratio])
+    #
+    # step_change_of_view_move = get_a_gps_coord_at_distance(0, 0.1) / lat_ratio
+    step_change_angle = 10
 
     corners = [
         np.array(_im_coords_top_left),
@@ -562,7 +568,7 @@ for iii in range(16,len(name_list)):
                 im_view = cv2.warpPerspective(im_resized, M, (width, height))
 
         elif k == ord('e'):
-            angle += 10
+            angle += step_change_angle
 
             mean_im_coords = np.mean(corners,axis = 0)
             _corners = [
@@ -573,13 +579,13 @@ for iii in range(16,len(name_list)):
             ]# counter clock wise
             rotated_corners = []
             for i in range(4):
-                rotated_point = mean_im_coords + rotation_anticlock(10, _corners[i])
+                rotated_point = mean_im_coords + rotation_anticlock(step_change_angle, _corners[i])
                 if rotated_point[0] > 0 and rotated_point[0] < im_resized.shape[1] and rotated_point[1] > 0 and rotated_point[1] < im_resized.shape[0]:
                     rotated_corners.append(rotated_point)
                 else:
                     break
             if len(rotated_corners) != 4:
-                angle-=10
+                angle-=step_change_angle
                 continue
             corners = np.array(rotated_corners, dtype="float32")
 
@@ -590,7 +596,7 @@ for iii in range(16,len(name_list)):
             im_view = cv2.warpPerspective(im_resized, M, (width, height))
 
         elif k == ord('q'):
-            angle -= 10
+            angle -= step_change_angle
 
             mean_im_coords = np.mean(corners, axis=0)
             _corners = [
@@ -601,13 +607,13 @@ for iii in range(16,len(name_list)):
             ]  # counter clock wise
             rotated_corners = []
             for i in range(4):
-                rotated_point = mean_im_coords + rotation_anticlock(-10, _corners[i])
+                rotated_point = mean_im_coords + rotation_anticlock(-step_change_angle, _corners[i])
                 if rotated_point[0] > 0 and rotated_point[0] < im_resized.shape[1] and rotated_point[1] > 0 and rotated_point[1] < im_resized.shape[0]:
                     rotated_corners.append(rotated_point)
                 else:
                     break
             if len(rotated_corners) != 4:
-                angle+=10
+                angle+=step_change_angle
                 continue
             corners = np.array(rotated_corners, dtype="float32")
 
@@ -761,8 +767,11 @@ for iii in range(16,len(name_list)):
 
     # print(im_min_boundary[1],im_max_boundary[1], im_min_boundary[0],im_max_boundary[0])
 
-    cv2.circle(im_resized_copy, gps_to_img_coords(destination_gps),
-               int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000), (255, 0, 255), 2)
+    # cv2.circle(im_resized_copy, gps_to_img_coords(destination_gps),
+    #            int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000), (255, 0, 255), 2)
+
+    cv2.rectangle(im_resized_copy, gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0]),
+                  gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2]), (255, 0, 255), 2)
 
     cv2.putText(im_resized_copy, 'Destination', np.array(gps_to_img_coords(destination_gps)) + np.array(
         [int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000),
