@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import pandas as pd
 import scipy.spatial as spt
-
+import random
 
 # you will need to download:
 # 18 folder
@@ -87,7 +87,7 @@ def change_corner(cs, change): # corners = cs
 #
 
 df = pd.read_csv('/Users/fanyue/Downloads/Batch_4594154_batch_results.csv')
-
+short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=None)
 name_list = []
 for i in df['Input.task_image_name_1']:
     name_list.append(i.replace('image_sample_', '').replace('.jpg',''))
@@ -361,11 +361,19 @@ for iii in range(20,len(name_list)):
             print('====== You have pressed ESC for task #', iii, ' =====')
             your_input = input('Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
 
-            if()
+            for i in range(len(short_cut[0][1:])):
+                sc = short_cut[0][1+i]
+                substitution = random.choice([j for j in short_cut.iloc[i+1,1:] if j==j])
+                print(sc)
+                your_input = your_input.replace(sc,substitution)
+
 
             print ('\n[Saved] You just input: \n', your_input)
-
-            if your_input == 'x':
+            if your_input == 'xxx':
+                approve = 'Need further inspection, the phase_0 may be problematic.'
+                if pos_list == []:
+                    pos_list = [corners]
+            elif your_input == 'x':
                 approve = 'Poor quality, rejected by our manual checking.'
                 if pos_list == []:
                     pos_list = [corners]
@@ -404,13 +412,23 @@ for iii in range(20,len(name_list)):
                             print ("Yes you have find it!!!")
                         elif ending_pix_dis_to_des < min_destination_edge_coord:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: You still need to adjust your height."
-                            print ("You still need to adjust your height.\n")
+                            print ("\nAutomatic Answer: You still need to adjust your height.\n")
                             continue
                         else:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
-                            print ("Nope, you haven't get there. Ask some more questions.\n")
-                            your_input = input('Enter your new question.\n')
+                            print ("\nAutomatic Answer: Nope, you haven't get there. Ask some more questions.\n")
+                            your_input = input('Enter your new question:\n')
+
+                            for i in range(len(short_cut[0][1:])):
+                                sc = short_cut[0][1 + i]
+                                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
+                                print(sc)
+                                your_input = your_input.replace(sc, substitution)
+
+                            print ('\n[Saved] You just input: \n', your_input)
+
                             dialog += '\n-    Question: ' + your_input
+
                     else:
                         dialog += '\n-    Question: ' + your_input
 

@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import pandas as pd
 import scipy.spatial as spt
-
+import  random
 
 # you will need to download:
 # 18 folder
@@ -90,6 +90,7 @@ with open(fname) as f:
 
 
 df = pd.read_csv('/Users/fanyue/Downloads/ChunBatch_4590561_batch_results.csv.csv')
+short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=None)
 
 name_list = []
 for i in df['Input.task_image_name']:
@@ -378,11 +379,16 @@ for iii in range(0,len(name_list)):
         if k == 27:
             approve = ''
             print('====== You have pressed ESC for task #', iii, ' =====')
-            your_input = input('Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
+            your_input = input(
+                'Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
+
+            for i in range(len(short_cut[0][1:])):
+                sc = short_cut[0][1 + i]
+                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
+                print(sc)
+                your_input = your_input.replace(sc, substitution)
 
             print ('\n[Saved] You just input: \n', your_input)
-
-
 
             if your_input == 'x':
                 approve = 'Poor quality, rejected by our manual checking.'
@@ -402,31 +408,44 @@ for iii in range(0,len(name_list)):
                     approve = 'X'
                     if your_input[0] == 'Y' or your_input[0] == 'y' or your_input[1] == 'Y' or your_input[1] == 'y':
                         diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
-                        diag_destination_coord = np.linalg.norm(np.array(gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
+                        diag_destination_coord = np.linalg.norm(np.array(
+                            gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(
+                            gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
 
                         min_destination_edge_coord = min(np.linalg.norm(np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][
-                                                                 0])) - np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][1]))),
+                            extracted_xview_landmarks[int(destination_index)][1][
+                                0])) - np.array(gps_to_img_coords(
+                            extracted_xview_landmarks[int(destination_index)][1][1]))),
 
-                                                        np.linalg.norm(np.array(gps_to_img_coords(
+                                                         np.linalg.norm(np.array(gps_to_img_coords(
                                                              extracted_xview_landmarks[int(destination_index)][1][
                                                                  1])) - np.array(gps_to_img_coords(
                                                              extracted_xview_landmarks[int(destination_index)][1][2])))
                                                          )
                         # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
-                        if np.abs(diag_view_area/diag_destination_coord - 1) < 0.4 and ending_pix_dis_to_des < min_destination_edge_coord:
+                        if np.abs(
+                                diag_view_area / diag_destination_coord - 1) < 0.4 and ending_pix_dis_to_des < min_destination_edge_coord:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
                             print ("Yes you have find it!!!")
                         elif ending_pix_dis_to_des < min_destination_edge_coord:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: You still need to adjust your height."
-                            print ("You still need to adjust your height.\n")
+                            print ("\nAutomatic Answer: You still need to adjust your height.\n")
                             continue
                         else:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
-                            print ("Nope, you haven't get there. Ask some more questions.\n")
-                            your_input = input('Enter your new question.')
+                            print ("\nAutomatic Answer: Nope, you haven't get there. Ask some more questions.\n")
+                            your_input = input('Enter your new question:\n')
+
+                            for i in range(len(short_cut[0][1:])):
+                                sc = short_cut[0][1 + i]
+                                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
+                                print(sc)
+                                your_input = your_input.replace(sc, substitution)
+
+                            print ('\n[Saved] You just input: \n', your_input)
+
                             dialog += '\n-    Question: ' + your_input
+
                     else:
                         dialog += '\n-    Question: ' + your_input
 
