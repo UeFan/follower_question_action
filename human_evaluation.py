@@ -32,8 +32,8 @@ import scipy.spatial as spt
 
 
 root_folder_path = '/Users/fanyue/xview/'
-# 710m * 400m = 16:9
-# 142 * 80
+# 710m * 400m = 16:9 # dia 815m
+# 71 * 40           # dia 81m @ 50m height
 max_view = np.array([710,400])
 min_view = np.array([71,40])
 # def zoom_in_out(event, x, y, flags, param):b
@@ -89,7 +89,7 @@ with open(fname) as f:
 
 
 
-df = pd.read_csv('/Users/fanyue/Downloads/Batch_4590561_batch_results.csv')
+df = pd.read_csv('/Users/fanyue/Downloads/ChunBatch_4590561_batch_results.csv.csv')
 
 name_list = []
 for i in df['Input.task_image_name']:
@@ -99,7 +99,7 @@ for i in df['Input.task_image_name']:
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
 
-for iii in range(20,len(name_list)):
+for iii in range(0,len(name_list)):
 
 
     img_name = name_list[iii].split('/')[0] + '.tif'
@@ -107,7 +107,7 @@ for iii in range(20,len(name_list)):
     print('folder created')
     p_dic = pickle.load( open( root_folder_path+name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
 
-    extracted_landmarks = p_dic['extracted_landmarks']
+
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
 
     path = root_folder_path + 'train_images/' + img_name
@@ -311,7 +311,7 @@ for iii in range(20,len(name_list)):
 
 
     cv2.setMouseCallback("navigation viewer", click_and_draw)
-
+    dialog = '\n Previous Dialog: \n-    Instruction: ' + complete_instruction
     while True:
         count_frame += 1
         cv2.line(im_view, (compass_pos,compass_pos), (int(compass_pos+20*np.sin(-angle/180*3.14159)), int(compass_pos-20*np.cos(-angle/180*3.14159))),(255,255,255), 2)
@@ -343,6 +343,27 @@ for iii in range(20,len(name_list)):
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
+        cv2.line(im_view, (int(width / 4), int(height / 4)), (int(width / 4 + 85), int(height / 4)),
+                 (0, 0, 255), 1)
+        cv2.line(im_view, (int(width / 4), int(height / 4)), (int(width / 4 ), int(height / 4 + 85)),
+                 (0, 0, 255), 1)
+
+        cv2.line(im_view, (int(3*width / 4), int(3*height / 4)), (int(3*width / 4 - 85), int(3*height / 4)),
+                 (0, 0, 255), 1)
+        cv2.line(im_view, (int(3*width / 4), int(3*height / 4)), (int(3*width / 4), int(3*height / 4 - 85)),
+                 (0, 0, 255), 1)
+
+        cv2.line(im_view, (int(3 * width / 4), int(height / 4)), (int(3 * width / 4 - 85), int(height / 4)),
+                 (0, 0, 255), 1)
+        cv2.line(im_view, (int(3 * width / 4), int(height / 4)), (int(3 * width / 4), int(height / 4 + 85)),
+                 (0, 0, 255), 1)
+
+        cv2.line(im_view, (int(width / 4), int(3 * height / 4)), (int(width / 4 + 85), int(3 * height / 4)),
+                 (0, 0, 255), 1)
+        cv2.line(im_view, (int(width / 4), int(3 * height / 4)), (int(width / 4), int(3 * height / 4 - 85)),
+                 (0, 0, 255), 1)
+
+
         cv2.line(im_view, (int(width/2-85), int(height/2)), (int(width/2+85), int(height/2)),
                 (0, 0, 255), 1)
 
@@ -357,41 +378,64 @@ for iii in range(20,len(name_list)):
         if k == 27:
             approve = ''
             print('====== You have pressed ESC for task #', iii, ' =====')
-            question = input('Enter your question. Or input x to reject. Or input y to claim the destination.\n')
+            your_input = input('Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
 
-            print ('\n[pickle saved] You just input: \n', question)
+            print ('\n[Saved] You just input: \n', your_input)
 
 
 
-            if question == 'x':
-                approve = 'Poor quality'
+            if your_input == 'x':
+                approve = 'Poor quality, rejected by our manual checking.'
                 if pos_list == []:
                     pos_list = [corners]
             else:
+                destination_coord = np.array(gps_to_img_coords(destination_gps))
                 starting_pix_dis_to_des = np.linalg.norm(
-                    np.array(starting_coord) - np.array(gps_to_img_coords(destination_gps)))
+                    np.array(starting_coord) - destination_coord)
                 ending_pix_dis_to_des = np.linalg.norm(
-                    np.array(np.mean(pos_list[-1], axis=0)) - np.array(gps_to_img_coords(destination_gps)))
+                    np.array(np.mean(pos_list[-1], axis=0)) - destination_coord)
                 if starting_pix_dis_to_des < ending_pix_dis_to_des - 100:
-                    question = 'x ' + question
-                    approve = 'Poor quality'
+                    # dialog = 'x ' + dialog
+                    approve = 'Poor quality, cannot lead to the right direction'
                     print('poor quality.')
                 else:
                     approve = 'X'
-                    if question[0] == 'Y' or question[0] == 'y' or question[1] == 'Y' or question[1] == 'y':
-                        if ending_pix_dis_to_des < 20:
-                            question += "Yes you have find it!!!"
+                    if your_input[0] == 'Y' or your_input[0] == 'y' or your_input[1] == 'Y' or your_input[1] == 'y':
+                        diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
+                        diag_destination_coord = np.linalg.norm(np.array(gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
+
+                        min_destination_edge_coord = min(np.linalg.norm(np.array(gps_to_img_coords(
+                                                             extracted_xview_landmarks[int(destination_index)][1][
+                                                                 0])) - np.array(gps_to_img_coords(
+                                                             extracted_xview_landmarks[int(destination_index)][1][1]))),
+
+                                                        np.linalg.norm(np.array(gps_to_img_coords(
+                                                             extracted_xview_landmarks[int(destination_index)][1][
+                                                                 1])) - np.array(gps_to_img_coords(
+                                                             extracted_xview_landmarks[int(destination_index)][1][2])))
+                                                         )
+                        # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
+                        if np.abs(diag_view_area/diag_destination_coord - 1) < 0.4 and ending_pix_dis_to_des < min_destination_edge_coord:
+                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
                             print ("Yes you have find it!!!")
+                        elif ending_pix_dis_to_des < min_destination_edge_coord:
+                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: You still need to adjust your height."
+                            print ("You still need to adjust your height.\n")
+                            continue
                         else:
-                            question += "Nope, you haven't get there. Ask some more questions."
+                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
                             print ("Nope, you haven't get there. Ask some more questions.\n")
-                            question = input('Enter your new question.')
+                            your_input = input('Enter your new question.')
+                            dialog += '\n-    Question: ' + your_input
+                    else:
+                        dialog += '\n-    Question: ' + your_input
 
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
                          'angle_list': angle_list,
                          'attention_list':attention_list,
-                         'question': question,
+                         'dialog': dialog,
+                         'question': your_input,
                          'Approve': approve,
                          'step_change_of_view_zoom':step_change_of_view_zoom,
                          'step_change_of_view_move':step_change_of_view_move,
@@ -695,6 +739,9 @@ for iii in range(20,len(name_list)):
              ),
              (int(center_coord[0]), int(center_coord[1])),
              (0, 0, 255), 2 + int(size_boundary[0] / 400))
+
+
+
     # for k in range(12):
     #
     #     if k == 0 or k ==3 or k==6 or k ==9:
@@ -777,7 +824,7 @@ for iii in range(20,len(name_list)):
         [int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000),
          int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000)]), \
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
+                0.5 + size_boundary[0] / 800, (255, 0, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
 
     cv2.imwrite(root_folder_path + name_list[iii].replace('/0/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
