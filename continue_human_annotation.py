@@ -32,10 +32,12 @@ import random
 
 dialog_phase = 1
 root_folder_path = '/Users/fanyue/xview/'
+df = pd.read_csv('/Users/fanyue/Downloads/Batch_4594154_batch_results.csv')
+short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=0, header=0)
 # 710m * 400m = 16:9
 # 142 * 80
-max_view = np.array([710,400])
-min_view = np.array([71,40])
+max_view = np.array([400,400])
+min_view = np.array([40,40])
 # def zoom_in_out(event, x, y, flags, param):b
 
 def polygon_area(points):
@@ -86,10 +88,9 @@ def change_corner(cs, change): # corners = cs
 #
 #
 
-df = pd.read_csv('/Users/fanyue/Downloads/Batch_4594154_batch_results.csv')
-short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=None)
+
 name_list = []
-for i in df['Input.task_image_name_1']:
+for i in df['Input.task_image_name']:
     name_list.append(i.replace('image_sample_', '').replace('.jpg',''))
 
 
@@ -167,20 +168,21 @@ def click_and_draw(event, x, y, flags, param):
 
 cv2.setMouseCallback("navigation viewer", click_and_draw)
 
-for iii in range(20,len(name_list)):
+for iii in range(31,len(name_list)):
 
 
-    img_name = name_list[iii].split('/')[0] + '.tif'
-    os.system('mkdir ' + root_folder_path + name_list[iii].split('/')[0] + '/'+str(dialog_phase+1)+'/')
+    img_name = name_list[iii].split('/')[1] +'.tif'
+    os.system('mkdir ' + root_folder_path + 'full_dataset/' + name_list[iii].split('/')[1] + '/'+str(dialog_phase+1)+'/')
+    print('folder created: ',root_folder_path + 'full_dataset/' + name_list[iii].split('/')[1] + '/'+str(dialog_phase+1)+'/')
+    print('Load pickle: ', root_folder_path + name_list[iii].replace('/'+str(dialog_phase-1)+'/','/'+ str(dialog_phase) +'/')+".pickle")
 
-    p_dic = pickle.load( open( root_folder_path+name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
+    p_dic = pickle.load( open( root_folder_path  + 'full_dataset/' +  name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
 
     extracted_landmarks = p_dic['extracted_landmarks']
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
 
     path = root_folder_path + 'train_images/' + img_name
-    im = cv2.imread(path, 1)
-
+    im_full_map = cv2.imread(path, 1)
 
 
 
@@ -219,19 +221,19 @@ for iii in range(20,len(name_list)):
     # gps_top_right = [gps_botm_left[0] + lat_ratio * im.shape[0], gps_botm_left[1] + lng_ratio * im.shape[1]]
     #
     p_dic = pickle.load( open( root_folder_path + name_list[iii].replace('/'+str(dialog_phase-1)+'/','/'+ str(dialog_phase) +'/')+".pickle", "rb" ) )
-
     pos_list = p_dic['pos_list']
+    length_of_traj = p_dic['length_of_traj']
     angle_list = p_dic['angle_list']
     action_list = p_dic['action_list']
     attention_list = p_dic['attention_list']
-    step_change_of_view_zoom = p_dic['step_change_of_view_zoom']
-    step_change_of_view_move = p_dic['step_change_of_view_move']
+    step_change_of_view_zoom = p_dic['step_change_of_view']
     lng_ratio = p_dic['lng_ratio']
     lat_ratio = p_dic['lat_ratio']
     gps_botm_left = p_dic['gps_botm_left']
     gps_top_right = p_dic['gps_top_right']
     dialog = p_dic['dialog']
 
+    _zoom_speed = 8
 
     p_dic = pickle.load( open( root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/','/0/').replace("_"+str(dialog_phase),'') +".pickle", "rb" ) )
     angle = angle_list[-1]
@@ -240,13 +242,18 @@ for iii in range(20,len(name_list)):
 
     starting_coord = np.mean(pos_list[0], axis = 0)
 
-    answer = df['Answer.tag_0'][iii]+df['Answer.tag_0'][iii]
+
+    if df['Answer.tag_1'][iii] == df['Answer.tag_1'][iii]:
+        answer = df['Answer.tag_0'][iii]+df['Answer.tag_1'][iii]
+    else:
+        answer = df['Answer.tag_0'][iii]
+
     dialog += '\n-    Answer: ' + answer
     # print ('\n Previous Dialog: ', complete_instruction)
 
     # print('-    Question: \n Am I looking at the right semicircle? \nWhere is the destination?')
     print(dialog)
-    im_resized = cv2.resize(im, (int(im.shape[1]*lng_ratio/lat_ratio ),im.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
+    im_resized = cv2.resize(im_full_map, (int(im_full_map.shape[1] * lng_ratio / lat_ratio), im_full_map.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
 
     #=======================================================
     #    show old traj
@@ -295,6 +302,11 @@ for iii in range(20,len(name_list)):
     count_frame = 0
 
     while True:
+        view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)\
+                     + 0.01
+        step_change_of_view = np.array([get_a_gps_coord_at_distance(0, _zoom_speed *6*view_ratio) / lat_ratio,
+                                        get_a_gps_coord_at_distance(0, _zoom_speed / width * height *6*view_ratio) / lat_ratio])
+
         count_frame += 1
         cv2.line(im_view, (compass_pos,compass_pos), (int(compass_pos+20*np.sin(-angle/180*3.14159)), int(compass_pos-20*np.cos(-angle/180*3.14159))),(255,255,255), 2)
         cv2.putText(im_view, 'N', (int(compass_pos+compass_size*np.sin(-angle/180*3.14159)), int(compass_pos-compass_size*np.cos(-angle/180*3.14159))), cv2.FONT_HERSHEY_SIMPLEX,
@@ -358,22 +370,30 @@ for iii in range(20,len(name_list)):
 
         if k == 27:
             approve = ''
-            print('====== You have pressed ESC for task #', iii, ' =====')
-            your_input = input('Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
+            print('\n====== You have pressed ESC for task #', iii, ' =====')
+            print(short_cut)
+            your_input = input(
+                '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
 
             for i in range(len(short_cut[0][1:])):
-                sc = short_cut[0][1+i]
-                substitution = random.choice([j for j in short_cut.iloc[i+1,1:] if j==j])
-                print(sc)
-                your_input = your_input.replace(sc,substitution)
+                sc = short_cut[0][1 + i]
+                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                for jj in range(len(substitution_list)):
+                    if sc + str(jj) in your_input:
+                        substitution = substitution_list[jj]
+                        your_input = your_input.replace(sc, substitution)
+
+                if sc in your_input:
+                    substitution = random.choice(substitution_list)
+                    your_input = your_input.replace(sc, substitution)
 
 
             print ('\n[Saved] You just input: \n', your_input)
-            if your_input == 'xxx':
+            if 'xxx' in your_input:
                 approve = 'Need further inspection, the phase_0 may be problematic.'
                 if pos_list == []:
                     pos_list = [corners]
-            elif your_input == 'x':
+            elif 'rej' in your_input:
                 approve = 'Poor quality, rejected by our manual checking.'
                 if pos_list == []:
                     pos_list = [corners]
@@ -389,30 +409,30 @@ for iii in range(20,len(name_list)):
                     print('poor quality.')
                 else:
                     approve = 'X'
-                    if your_input[0] == 'Y' or your_input[0] == 'y' or your_input[1] == 'Y' or your_input[1] == 'y':
+                    if (len(your_input)>=1 and (your_input[0] == 'Y' or your_input[0] == 'y')) or (len(your_input)>=2 and (your_input[1] == 'Y' or your_input[1] == 'y')):
                         diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
                         diag_destination_coord = np.linalg.norm(np.array(
                             gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(
                             gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
 
-                        min_destination_edge_coord = min(np.linalg.norm(np.array(gps_to_img_coords(
-                            extracted_xview_landmarks[int(destination_index)][1][
-                                0])) - np.array(gps_to_img_coords(
-                            extracted_xview_landmarks[int(destination_index)][1][1]))),
+                        destination_cnt = cv2.UMat(np.array(
+                            [gps_to_img_coords(x) for x in extracted_xview_landmarks[int(destination_index)][1]],
+                            dtype=np.int32))
+                        dist = cv2.pointPolygonTest(destination_cnt, np.mean(pos_list[-1], axis=0), True)
 
-                                                         np.linalg.norm(np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][
-                                                                 1])) - np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][2])))
-                                                         )
+
                         # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
-                        if np.abs(
-                                diag_view_area / diag_destination_coord - 1) < 0.4 and ending_pix_dis_to_des < min_destination_edge_coord:
+                        if (diag_view_area / diag_destination_coord<1.8 and diag_destination_coord/ diag_view_area<1.8) and dist >= 0:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
-                            print ("Yes you have find it!!!")
-                        elif ending_pix_dis_to_des < min_destination_edge_coord:
-                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: You still need to adjust your height."
-                            print ("\nAutomatic Answer: You still need to adjust your height.\n")
+                            print ("Yes you have find it!!!\n")
+                        elif dist >= 0:
+                            print(diag_view_area, diag_destination_coord)
+                            if diag_view_area > diag_destination_coord:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly lower."
+                                print ("\nAutomatic Answer: You need to fly lower.\n")
+                            else:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly higher."
+                                print ("\nAutomatic Answer: You need to fly higher..\n")
                             continue
                         else:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
@@ -421,32 +441,38 @@ for iii in range(20,len(name_list)):
 
                             for i in range(len(short_cut[0][1:])):
                                 sc = short_cut[0][1 + i]
-                                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
-                                print(sc)
-                                your_input = your_input.replace(sc, substitution)
+                                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                                for jj in range(len(substitution_list)):
+                                    if sc + str(jj) in your_input:
+                                        substitution = substitution_list[jj]
+                                        your_input = your_input.replace(sc, substitution)
+
+                                if sc in your_input:
+                                    substitution = random.choice(substitution_list)
+                                    your_input = your_input.replace(sc, substitution)
 
                             print ('\n[Saved] You just input: \n', your_input)
 
                             dialog += '\n-    Question: ' + your_input
 
                     else:
-                        dialog += '\n-    Question: ' + your_input
+                        assert False
 
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
+                         'length_of_traj': len(pos_list),
                          'angle_list': angle_list,
                          'attention_list':attention_list,
                          'dialog': dialog,
                          'question': your_input,
                          'Approve': approve,
-                         'step_change_of_view_zoom':step_change_of_view_zoom,
-                         'step_change_of_view_move':step_change_of_view_move,
+                         'step_change_of_view':step_change_of_view,
                          'lat_ratio':lat_ratio,
                          'lng_ratio':lng_ratio,
                          'gps_botm_left':gps_botm_left,
                          'gps_top_right':gps_top_right
                          }, open(root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/').replace("_"+str(dialog_phase),"_"+str(dialog_phase+1))+'.pickle', 'wb'))
-
+            print ('pickle saved: ',root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/').replace("_"+str(dialog_phase),"_"+str(dialog_phase+1))+'.pickle')
 
 
 
@@ -518,8 +544,8 @@ for iii in range(20,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([0, -1]), step_change_of_view_zoom * np.array([0, -1]),
-                 step_change_of_view_zoom * np.array([0, -1]), step_change_of_view_zoom * np.array([0, -1])]
+                [step_change_of_view * np.array([0, -1]), step_change_of_view * np.array([0, -1]),
+                 step_change_of_view * np.array([0, -1]), step_change_of_view * np.array([0, -1])]
             )
 
 
@@ -545,8 +571,8 @@ for iii in range(20,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([0, 1]), step_change_of_view_zoom * np.array([0, 1]),
-                 step_change_of_view_zoom * np.array([0, 1]), step_change_of_view_zoom * np.array([0, 1])]
+                [step_change_of_view * np.array([0, 1]), step_change_of_view * np.array([0, 1]),
+                 step_change_of_view * np.array([0, 1]), step_change_of_view * np.array([0, 1])]
             )
             new_corners = []
             for i in _new_corners:
@@ -569,8 +595,8 @@ for iii in range(20,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([1, 0]), step_change_of_view_zoom * np.array([1, 0]),
-                 step_change_of_view_zoom * np.array([1, 0]), step_change_of_view_zoom * np.array([1, 0])]
+                [step_change_of_view * np.array([1, 0]), step_change_of_view * np.array([1, 0]),
+                 step_change_of_view * np.array([1, 0]), step_change_of_view * np.array([1, 0])]
             )
             new_corners = []
             for i in _new_corners:
@@ -593,8 +619,8 @@ for iii in range(20,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([-1, 0]), step_change_of_view_zoom * np.array([-1, 0]),
-                 step_change_of_view_zoom * np.array([-1, 0]), step_change_of_view_zoom * np.array([-1, 0])]
+                [step_change_of_view * np.array([-1, 0]), step_change_of_view * np.array([-1, 0]),
+                 step_change_of_view * np.array([-1, 0]), step_change_of_view * np.array([-1, 0])]
             )
             new_corners = []
             for i in _new_corners:
@@ -675,6 +701,7 @@ for iii in range(20,len(name_list)):
         pos_list.append(corners)
 
     __coords = []
+    __coords.append(pos_list[0])
     _i = 0
     for i in pos_list:
         _i += 1
@@ -683,12 +710,13 @@ for iii in range(20,len(name_list)):
         if (__coords != []):
             cv2.line(im_resized_copy, (int(mean_im_coords[0]), int(mean_im_coords[1])),
                      np.array(np.mean(__coords[-1], axis=0), dtype=np.int32), (255, 0, 255), 4)
-        __coords.append(i)
+        __coords.append([mean_im_coords])
 
         if _i == len(pos_list):
             cv2.drawContours(im_resized_copy, [np.array(
                 [[int(i[0][0]), int(i[0][1])], [int(i[1][0]), int(i[1][1])], [int(i[2][0]), int(i[2][1])],
                  [int(i[3][0]), int(i[3][1])]])], 0, (255, 255, 255), 1)
+            __coords.append(i)
         # cv2.rectangle(im_resized_copy, (int(i[0][0]),int(i[0][1])), (int(i[2][0]),int(i[2][1])), (255, 255, 255), 1)
 
     # print((np.array(__coords,dtype = np.int32),\
@@ -809,11 +837,11 @@ for iii in range(20,len(name_list)):
          int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000)]), \
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
-    print ('[Debug]: '+root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/image_sample_').replace("_"+str(dialog_phase),"_"+str(dialog_phase+1))+'.jpg')
-    cv2.imwrite(root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/image_sample_').replace("_"+str(dialog_phase),"_"+str(dialog_phase+1))+'.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
+    print ('[Debug]: ' + root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/image_sample_')[:-1] + str(dialog_phase+1) + '.jpg')
+    cv2.imwrite(root_folder_path + name_list[iii].replace('/'+str(dialog_phase)+'/', '/'+str(dialog_phase+1)+'/image_sample_')[:-1] + str(dialog_phase+1) + '.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
 
-    gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/0/image_sample_') + '.jpg', 1)
+    # gt = cv2.imread(root_folder_path + name_list[iii].replace('/', '/0/image_sample_') + '.jpg', 1)
     # cv2.imshow('GT routes', gt)
     # cv2.waitKey(0)
 cv2.destroyAllWindows()

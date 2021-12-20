@@ -32,10 +32,14 @@ import  random
 
 
 root_folder_path = '/Users/fanyue/xview/'
+fname = root_folder_path + 'xView_train.geojson'
+df = pd.read_csv('/Users/fanyue/Downloads/TongzhouBatch_4632300_batch_results.csv.csv')
+short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=0)
+
 # 710m * 400m = 16:9 # dia 815m
 # 71 * 40           # dia 81m @ 50m height
-max_view = np.array([710,400])
-min_view = np.array([71,40])
+max_view = np.array([400,400])
+min_view = np.array([40,40])
 # def zoom_in_out(event, x, y, flags, param):b
 
 
@@ -82,15 +86,12 @@ def change_corner(cs, change): # corners = cs
     return new_cs
 
 
-fname = root_folder_path + 'xView_train.geojson'
 
 with open(fname) as f:
     data = json.load(f)
 
 
 
-df = pd.read_csv('/Users/fanyue/Downloads/ChunBatch_4590561_batch_results.csv.csv')
-short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=None)
 
 name_list = []
 for i in df['Input.task_image_name']:
@@ -100,19 +101,21 @@ for i in df['Input.task_image_name']:
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
 
-for iii in range(0,len(name_list)):
+for iii in range(22 ,len(name_list)):
 
 
-    img_name = name_list[iii].split('/')[0] + '.tif'
-    os.system('mkdir ' + root_folder_path + name_list[iii].split('/')[0] + '/1/')
-    print('folder created')
-    p_dic = pickle.load( open( root_folder_path+name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
+    img_name = name_list[iii].split('/')[1] +'.tif'
+    os.system('mkdir ' + root_folder_path + 'full_dataset/' + name_list[iii].split('/')[1] + '/1/')
+    print('folder created:  ', name_list[iii].split('/')[1] + '/1/')
+    print('pickle loaded: ',root_folder_path + name_list[iii] +".pickle")
+
+    p_dic = pickle.load( open( root_folder_path  + 'full_dataset/' + name_list[iii].split('/')[1] + '/0/' +img_name+".pickle", "rb" ) )
 
 
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
 
     path = root_folder_path + 'train_images/' + img_name
-    im = cv2.imread(path, 1)
+    im_full_map = cv2.imread(path, 1)
 
 
 
@@ -124,42 +127,60 @@ for iii in range(0,len(name_list)):
 
 
     complete_instruction = df['Answer.tag'][iii]
-    print ('\n Instruction: ',complete_instruction)
+    print('【Reminder】: \n1. Refer the given instruction.\n2. Draw green circle (ROI).\n3. Use at least one shortcut.')
+    print ('\n 【Instruction】: ',complete_instruction)
     ### Get the boundary coords. The gps coords will be lat,long
 
 
-    # calculate the coordinate for the edge
+    # calculate some basic measurements of the full map
     bb_list = []
     for i in range(len(data['features'])):
         if (data['features'][i]['properties']['image_id'] == img_name):
             bb_list.append([i, data['features'][i]['properties']['type_id']])
 
-    _gps_coord = np.array(data['features'][bb_list[6][0]]['geometry']['coordinates'])
+    _gps_coord = np.array(data['features'][bb_list[0][0]]['geometry']['coordinates'])
     gps_coord_0 = np.min(_gps_coord, axis=1)[0]
 
-    _gps_coord = np.array(data['features'][bb_list[-6][0]]['geometry']['coordinates'])
+    _index = 0
+    distance_max = 0
+    for i in range(len(bb_list)):
+
+        _gps_coord = np.array(data['features'][bb_list[i][0]]['geometry']['coordinates'])
+        gps_coord_1 = np.max(_gps_coord, axis=1)[0]
+
+        _dis = np.linalg.norm(gps_coord_0 - gps_coord_1)
+
+        if _dis > distance_max:
+            distance_max = _dis
+            _index = i
+    _gps_coord = np.array(data['features'][bb_list[_index][0]]['geometry']['coordinates'])
     gps_coord_1 = np.max(_gps_coord, axis=1)[0]
-    _im_coords = data['features'][bb_list[6][0]]['properties']['bounds_imcoords'].split(',')
+
+
+    _im_coords = data['features'][bb_list[0][0]]['properties']['bounds_imcoords'].split(',')
     im_coords_0 = np.array([int(_im_coords[3]), int(_im_coords[0])])
 
-    _im_coords = data['features'][bb_list[-6][0]]['properties']['bounds_imcoords'].split(',')
+    _im_coords = data['features'][bb_list[_index][0]]['properties']['bounds_imcoords'].split(',')
     im_coords_1 = np.array([int(_im_coords[1]), int(_im_coords[2])])
+
     lng_ratio = (gps_coord_1[0] - gps_coord_0[0]) / (im_coords_1[1] - im_coords_0[1])
+
     lat_ratio = (gps_coord_1[1] - gps_coord_0[1]) / (im_coords_0[0] - im_coords_1[0])
 
-    gps_botm_left = [gps_coord_0[1] - lat_ratio * (im.shape[0] - 1 - im_coords_0[0]),
+
+    gps_botm_left = [gps_coord_0[1] - lat_ratio * (im_full_map.shape[0] - 1 - im_coords_0[0]),
                      gps_coord_0[0] - lng_ratio * (im_coords_0[1] - 0)]
 
-    gps_top_right = [gps_botm_left[0] + lat_ratio * im.shape[0], gps_botm_left[1] + lng_ratio * im.shape[1]]
+    gps_top_right = [gps_botm_left[0] + lat_ratio * im_full_map.shape[0], gps_botm_left[1] + lng_ratio * im_full_map.shape[1]]
 
-    im_resized = cv2.resize(im, (int(im.shape[1]*lng_ratio/lat_ratio ),im.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
+    im_resized = cv2.resize(im_full_map, (int(im_full_map.shape[1] * lng_ratio / lat_ratio), im_full_map.shape[0]), interpolation = cv2.INTER_AREA) # ratio_all = lat_ratio
     im_resized_copy = im_resized.copy()
 
 
-
+    # load some other basic measurements of the full map
     p_dic = pickle.load( open( root_folder_path + name_list[iii] +".pickle", "rb" ) )
 
-    angle = p_dic['angle']
+    angle = round(p_dic['angle'])
     routes = p_dic['google_direction_route']
     starting_gps = p_dic['starting_gps']
     starting_gps = np.array(starting_gps)
@@ -168,9 +189,6 @@ for iii in range(0,len(name_list)):
 
     starting_coord = gps_to_img_coords(starting_gps)
 
-    # cv2.setMouseCallback("navigation viewer", zoom_in_out)
-
-    # end_of_route = 0q
     size_of_view = min_view
     _gps_coord_top_left = [get_a_gps_coord_at_distance(starting_gps[0], size_of_view[1]/2), get_a_gps_coord_at_distance(starting_gps[1], -size_of_view[0]/2)]
     _gps_coord_bot_right = [get_a_gps_coord_at_distance(starting_gps[0], -size_of_view[1]/2), get_a_gps_coord_at_distance(starting_gps[1], size_of_view[0]/2)]
@@ -180,15 +198,7 @@ for iii in range(0,len(name_list)):
 
 
 
-    step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, 16/ 2)/lat_ratio, get_a_gps_coord_at_distance(0, 9/ 2)/lat_ratio])
 
-    step_change_of_view_move = get_a_gps_coord_at_distance(0, 10)/lat_ratio
-
-    # step_change_of_view_zoom = np.array(
-    #     [get_a_gps_coord_at_distance(0,  0.32) / lat_ratio, get_a_gps_coord_at_distance(0, 0.18) / lat_ratio])
-    #
-    # step_change_of_view_move = get_a_gps_coord_at_distance(0, 0.1) / lat_ratio
-    step_change_angle = 10
 
     corners = [
         np.array(_im_coords_top_left),
@@ -198,8 +208,19 @@ for iii in range(0,len(name_list)):
     ]# clock wise
 
     # angle = 0
-    width = 1280
+    width = 720
     height = 720
+
+    _zoom_speed = 8
+    step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, _zoom_speed/ 2)/lat_ratio, get_a_gps_coord_at_distance(0, _zoom_speed/width*height/ 2)/lat_ratio])
+
+    # step_change_of_view_move = get_a_gps_coord_at_distance(0, 10)/lat_ratio
+
+    # step_change_of_view = np.array(
+    #     [get_a_gps_coord_at_distance(0,  0.32) / lat_ratio, get_a_gps_coord_at_distance(0, 0.18) / lat_ratio])
+    #
+    # step_change_of_view_move = get_a_gps_coord_at_distance(0, 0.1) / lat_ratio
+    step_change_angle = 10
     dst_pts = np.array([[0, 0],
                         [width - 1, 0],
                         [width - 1, height - 1],
@@ -234,7 +255,7 @@ for iii in range(0,len(name_list)):
 
     action_list = []
     angle_list = []
-    pos_list = []
+    pos_list = [corners]
     attention_list = []
     compass_pos = 100
     compass_size = 50
@@ -314,6 +335,11 @@ for iii in range(0,len(name_list)):
     cv2.setMouseCallback("navigation viewer", click_and_draw)
     dialog = '\n Previous Dialog: \n-    Instruction: ' + complete_instruction
     while True:
+        view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)\
+                     + 0.01
+        step_change_of_view = np.array([get_a_gps_coord_at_distance(0, _zoom_speed *6*view_ratio) / lat_ratio,
+                                        get_a_gps_coord_at_distance(0, _zoom_speed / width * height *6*view_ratio) / lat_ratio])
+
         count_frame += 1
         cv2.line(im_view, (compass_pos,compass_pos), (int(compass_pos+20*np.sin(-angle/180*3.14159)), int(compass_pos-20*np.cos(-angle/180*3.14159))),(255,255,255), 2)
         cv2.putText(im_view, 'N', (int(compass_pos+compass_size*np.sin(-angle/180*3.14159)), int(compass_pos-compass_size*np.cos(-angle/180*3.14159))), cv2.FONT_HERSHEY_SIMPLEX,
@@ -378,19 +404,28 @@ for iii in range(0,len(name_list)):
 
         if k == 27:
             approve = ''
-            print('====== You have pressed ESC for task #', iii, ' =====')
+            print('\n====== You have pressed ESC for task #', iii, ' =====')
+            print(short_cut)
             your_input = input(
-                'Enter your question. Or input x to reject. Or input sentence starting with y to claim the destination.\n')
+                '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
+
+
 
             for i in range(len(short_cut[0][1:])):
                 sc = short_cut[0][1 + i]
-                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
-                print(sc)
-                your_input = your_input.replace(sc, substitution)
+                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                for jj in range(len(substitution_list)):
+                    if sc+str(jj) in your_input:
+                        substitution = substitution_list[jj]
+                        your_input = your_input.replace(sc, substitution)
+
+                if sc in your_input:
+                    substitution = random.choice(substitution_list)
+                    your_input = your_input.replace(sc, substitution)
 
             print ('\n[Saved] You just input: \n', your_input)
 
-            if your_input == 'x':
+            if 'rej' in your_input:
                 approve = 'Poor quality, rejected by our manual checking.'
                 if pos_list == []:
                     pos_list = [corners]
@@ -406,30 +441,37 @@ for iii in range(0,len(name_list)):
                     print('poor quality.')
                 else:
                     approve = 'X'
-                    if your_input[0] == 'Y' or your_input[0] == 'y' or your_input[1] == 'Y' or your_input[1] == 'y':
+                    if (len(your_input)>=1 and (your_input[0] == 'Y' or your_input[0] == 'y')) or (len(your_input)>=2 and (your_input[1] == 'Y' or your_input[1] == 'y')):
                         diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
                         diag_destination_coord = np.linalg.norm(np.array(
                             gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(
                             gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
 
-                        min_destination_edge_coord = min(np.linalg.norm(np.array(gps_to_img_coords(
-                            extracted_xview_landmarks[int(destination_index)][1][
-                                0])) - np.array(gps_to_img_coords(
-                            extracted_xview_landmarks[int(destination_index)][1][1]))),
+                        destination_cnt = cv2.UMat(np.array([gps_to_img_coords(x) for x in extracted_xview_landmarks[int(destination_index)][1]], dtype=np.int32))
+                        dist = cv2.pointPolygonTest(destination_cnt, np.mean(pos_list[-1], axis=0), True)
 
-                                                         np.linalg.norm(np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][
-                                                                 1])) - np.array(gps_to_img_coords(
-                                                             extracted_xview_landmarks[int(destination_index)][1][2])))
-                                                         )
+
+                        # min_destination_edge_coord = min(np.linalg.norm(np.array(gps_to_img_coords(
+                        #     extracted_xview_landmarks[int(destination_index)][1][
+                        #         0])) - np.array(gps_to_img_coords(
+                        #     extracted_xview_landmarks[int(destination_index)][1][1]))),
+                        #
+                        #                                  np.linalg.norm(np.array(gps_to_img_coords(
+                        #                                      extracted_xview_landmarks[int(destination_index)][1][
+                        #                                          1])) - np.array(gps_to_img_coords(
+                        #                                      extracted_xview_landmarks[int(destination_index)][1][2])))
+                        #                                  )
                         # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
-                        if np.abs(
-                                diag_view_area / diag_destination_coord - 1) < 0.4 and ending_pix_dis_to_des < min_destination_edge_coord:
+                        if (diag_view_area / diag_destination_coord<1.8 and diag_destination_coord/ diag_view_area<1.8) and dist >= 0:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
-                            print ("Yes you have find it!!!")
-                        elif ending_pix_dis_to_des < min_destination_edge_coord:
-                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: You still need to adjust your height."
-                            print ("\nAutomatic Answer: You still need to adjust your height.\n")
+                            print ("Yes you have find it!!!\n")
+                        elif dist >= 0:
+                            if diag_view_area > diag_destination_coord:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly lower."
+                                print ("\nAutomatic Answer: You need to fly lower.\n")
+                            else:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly higher."
+                                print ("\nAutomatic Answer: You need to fly higher.\n")
                             continue
                         else:
                             dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
@@ -438,26 +480,33 @@ for iii in range(0,len(name_list)):
 
                             for i in range(len(short_cut[0][1:])):
                                 sc = short_cut[0][1 + i]
-                                substitution = random.choice([j for j in short_cut.iloc[i + 1, 1:] if j == j])
-                                print(sc)
-                                your_input = your_input.replace(sc, substitution)
+                                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                                for jj in range(len(substitution_list)):
+                                    if sc + str(jj) in your_input:
+                                        substitution = substitution_list[jj]
+                                        your_input = your_input.replace(sc, substitution)
+
+                                if sc in your_input:
+                                    substitution = random.choice(substitution_list)
+                                    your_input = your_input.replace(sc, substitution)
 
                             print ('\n[Saved] You just input: \n', your_input)
 
                             dialog += '\n-    Question: ' + your_input
 
                     else:
-                        dialog += '\n-    Question: ' + your_input
+                        assert False
 
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
+                         'length_of_traj': len(pos_list),
                          'angle_list': angle_list,
                          'attention_list':attention_list,
                          'dialog': dialog,
                          'question': your_input,
                          'Approve': approve,
                          'step_change_of_view_zoom':step_change_of_view_zoom,
-                         'step_change_of_view_move':step_change_of_view_move,
+                         # 'step_change_of_view_move':step_change_of_view_move,
                          'lat_ratio':lat_ratio,
                          'lng_ratio':lng_ratio,
                          'gps_botm_left':gps_botm_left,
@@ -534,8 +583,8 @@ for iii in range(0,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([0, -1]), step_change_of_view_zoom * np.array([0, -1]),
-                 step_change_of_view_zoom * np.array([0, -1]), step_change_of_view_zoom * np.array([0, -1])]
+                [step_change_of_view * np.array([0, -1]), step_change_of_view * np.array([0, -1]),
+                 step_change_of_view * np.array([0, -1]), step_change_of_view * np.array([0, -1])]
             )
 
 
@@ -561,8 +610,8 @@ for iii in range(0,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([0, 1]), step_change_of_view_zoom * np.array([0, 1]),
-                 step_change_of_view_zoom * np.array([0, 1]), step_change_of_view_zoom * np.array([0, 1])]
+                [step_change_of_view * np.array([0, 1]), step_change_of_view * np.array([0, 1]),
+                 step_change_of_view * np.array([0, 1]), step_change_of_view * np.array([0, 1])]
             )
             new_corners = []
             for i in _new_corners:
@@ -585,8 +634,8 @@ for iii in range(0,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([1, 0]), step_change_of_view_zoom * np.array([1, 0]),
-                 step_change_of_view_zoom * np.array([1, 0]), step_change_of_view_zoom * np.array([1, 0])]
+                [step_change_of_view * np.array([1, 0]), step_change_of_view * np.array([1, 0]),
+                 step_change_of_view * np.array([1, 0]), step_change_of_view * np.array([1, 0])]
             )
             new_corners = []
             for i in _new_corners:
@@ -609,8 +658,8 @@ for iii in range(0,len(name_list)):
 
             _new_corners = change_corner(
                 corners,
-                [step_change_of_view_zoom * np.array([-1, 0]), step_change_of_view_zoom * np.array([-1, 0]),
-                 step_change_of_view_zoom * np.array([-1, 0]), step_change_of_view_zoom * np.array([-1, 0])]
+                [step_change_of_view * np.array([-1, 0]), step_change_of_view * np.array([-1, 0]),
+                 step_change_of_view * np.array([-1, 0]), step_change_of_view * np.array([-1, 0])]
             )
             new_corners = []
             for i in _new_corners:
@@ -691,20 +740,22 @@ for iii in range(0,len(name_list)):
         pos_list.append(corners)
 
     __coords = []
+    __coords.append(pos_list[0])
     _i = 0
     for i in pos_list:
-        _i +=1
+        _i += 1
         mean_im_coords = np.mean(i, axis=0)
         # print(mean_im_coords)
-        if(__coords != []):
-            cv2.line(im_resized_copy,(int(mean_im_coords[0]),int(mean_im_coords[1])), np.array(np.mean(__coords[-1], axis = 0), dtype = np.int32),(255, 0, 255),4)
-        __coords.append(i)
+        if (__coords != []):
+            cv2.line(im_resized_copy, (int(mean_im_coords[0]), int(mean_im_coords[1])),
+                     np.array(np.mean(__coords[-1], axis=0), dtype=np.int32), (255, 0, 255), 4)
+        __coords.append([mean_im_coords])
 
-        if  _i == len(pos_list):
-
+        if _i == len(pos_list):
             cv2.drawContours(im_resized_copy, [np.array(
                 [[int(i[0][0]), int(i[0][1])], [int(i[1][0]), int(i[1][1])], [int(i[2][0]), int(i[2][1])],
                  [int(i[3][0]), int(i[3][1])]])], 0, (255, 255, 255), 1)
+            __coords.append(i)
         # cv2.rectangle(im_resized_copy, (int(i[0][0]),int(i[0][1])), (int(i[2][0]),int(i[2][1])), (255, 255, 255), 1)
 
     # print((np.array(__coords,dtype = np.int32),\
@@ -848,7 +899,7 @@ for iii in range(0,len(name_list)):
     cv2.imwrite(root_folder_path + name_list[iii].replace('/0/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 
 
-    gt = cv2.imread(root_folder_path + name_list[iii].replace('/0/', '/0/image_sample_') + '.jpg', 1)
+    # gt = cv2.imread(root_folder_path + name_list[iii].replace('/0/', '/0/image_sample_') + '.jpg', 1)
     # cv2.imshow('GT routes', gt)
     # cv2.waitKey(0)
 cv2.destroyAllWindows()
