@@ -455,7 +455,14 @@ for iii in range(31,len(name_list)):
 
                             dialog += '\n-    Question: ' + your_input
 
+
+                    elif len(your_input) > 0:
+
+                        dialog += '\n-    Question: ' + your_input
+
+
                     else:
+
                         assert False
 
             pickle.dump({'action_list': action_list,

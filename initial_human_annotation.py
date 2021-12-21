@@ -34,7 +34,7 @@ import  random
 root_folder_path = '/Users/fanyue/xview/'
 fname = root_folder_path + 'xView_train.geojson'
 df = pd.read_csv('/Users/fanyue/Downloads/TongzhouBatch_4632300_batch_results.csv.csv')
-short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=None, header=0)
+short_cut = pd.read_excel('./Common questions.xlsx', index_col=None, header=0)
 
 # 710m * 400m = 16:9 # dia 815m
 # 71 * 40           # dia 81m @ 50m height
@@ -493,6 +493,8 @@ for iii in range(22 ,len(name_list)):
                             print ('\n[Saved] You just input: \n', your_input)
 
                             dialog += '\n-    Question: ' + your_input
+                    elif len(your_input)>0:
+                        dialog += '\n-    Question: ' + your_input
 
                     else:
                         assert False
