@@ -376,10 +376,11 @@ for iii in range(31,len(name_list)):
                 '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
 
             for i in range(len(short_cut[0][1:])):
-                sc = short_cut[0][1 + i]
-                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                sc = short_cut.iloc[i, 0]
+                substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
+                print (substitution_list)
                 for jj in range(len(substitution_list)):
-                    if sc + str(jj) in your_input:
+                    if sc + str(int(jj)) in your_input:
                         substitution = substitution_list[jj]
                         your_input = your_input.replace(sc, substitution)
 
@@ -440,10 +441,11 @@ for iii in range(31,len(name_list)):
                             your_input = input('Enter your new question:\n')
 
                             for i in range(len(short_cut[0][1:])):
-                                sc = short_cut[0][1 + i]
-                                substitution_list = [j for j in short_cut.iloc[i + 1, 2:] if j == j]
+                                sc = short_cut.iloc[i, 0]
+                                substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
+                                print (substitution_list)
                                 for jj in range(len(substitution_list)):
-                                    if sc + str(jj) in your_input:
+                                    if sc + str(int(jj)) in your_input:
                                         substitution = substitution_list[jj]
                                         your_input = your_input.replace(sc, substitution)
 
@@ -462,7 +464,6 @@ for iii in range(31,len(name_list)):
 
 
                     else:
-
                         assert False
 
             pickle.dump({'action_list': action_list,
