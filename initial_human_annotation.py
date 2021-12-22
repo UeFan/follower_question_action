@@ -104,7 +104,7 @@ cv2.namedWindow('navigation viewer')
 
 for iii in range(0 ,len(name_list)):
 
-    index =  np.where(df['Input.task_image_name'][2] == pre_rejected_list_df['Input.task_image_name'])[0][0]
+    index =  np.where(df['Input.task_image_name'][iii] == pre_rejected_list_df['Input.task_image_name'])[0][0]
     if pre_rejected_list_df.loc[index,'Reject'] == pre_rejected_list_df.loc[index,'Reject']:
         continue
 
@@ -410,6 +410,12 @@ for iii in range(0 ,len(name_list)):
             approve = ''
             print('\n====== You have pressed ESC for task #', iii, ' =====')
 
+            destination_coord = np.array(gps_to_img_coords(destination_gps))
+            starting_pix_dis_to_des = np.linalg.norm(
+                np.array(starting_coord) - destination_coord)
+            ending_pix_dis_to_des = np.linalg.norm(
+                np.array(np.mean(pos_list[-1], axis=0)) - destination_coord)
+
             if starting_pix_dis_to_des < ending_pix_dis_to_des - 100:
                 # dialog = 'x ' + dialog
                 approve = 'Poor quality, cannot lead to the right direction'
@@ -442,12 +448,6 @@ for iii in range(0 ,len(name_list)):
                 if pos_list == []:
                     pos_list = [corners]
             else:
-                destination_coord = np.array(gps_to_img_coords(destination_gps))
-                starting_pix_dis_to_des = np.linalg.norm(
-                    np.array(starting_coord) - destination_coord)
-                ending_pix_dis_to_des = np.linalg.norm(
-                    np.array(np.mean(pos_list[-1], axis=0)) - destination_coord)
-
 
                 approve = 'X'
                 if (len(your_input)>=1 and (your_input[0] == 'Y' or your_input[0] == 'y')) or (len(your_input)>=2 and (your_input[1] == 'Y' or your_input[1] == 'y')):
