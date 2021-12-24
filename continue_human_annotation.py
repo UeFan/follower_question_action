@@ -192,7 +192,6 @@ for iii in range(31,len(name_list)):
     # Lines = file1.readlines()
 
 
-
     ### Get the boundary coords. The gps coords will be lat,long
 
 
@@ -223,10 +222,12 @@ for iii in range(31,len(name_list)):
     p_dic = pickle.load( open( root_folder_path + name_list[iii].replace('/'+str(dialog_phase-1)+'/','/'+ str(dialog_phase) +'/')+".pickle", "rb" ) )
     pos_list = p_dic['pos_list']
     length_of_traj = p_dic['length_of_traj']
+    if type(length_of_traj) != type([]):
+        length_of_traj = [length_of_traj]
     angle_list = p_dic['angle_list']
     action_list = p_dic['action_list']
     attention_list = p_dic['attention_list']
-    step_change_of_view_zoom = p_dic['step_change_of_view']
+    step_change_of_view_zoom = p_dic['step_change_of_view_zoom']
     lng_ratio = p_dic['lng_ratio']
     lat_ratio = p_dic['lat_ratio']
     gps_botm_left = p_dic['gps_botm_left']
@@ -371,107 +372,107 @@ for iii in range(31,len(name_list)):
         if k == 27:
             approve = ''
             print('\n====== You have pressed ESC for task #', iii, ' =====')
+            destination_coord = np.array(gps_to_img_coords(destination_gps))
+            starting_pix_dis_to_des = np.linalg.norm(
+                np.array(starting_coord) - destination_coord)
+            ending_pix_dis_to_des = np.linalg.norm(
+                np.array(np.mean(pos_list[-1], axis=0)) - destination_coord)
 
             if starting_pix_dis_to_des < ending_pix_dis_to_des - 100:
                 # dialog = 'x ' + dialog
                 approve = 'Poor quality, cannot lead to the right direction'
                 print('poor quality.')
+                your_input = ''
+            else:
+                print(short_cut)
+                your_input = input(
+                    '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
 
-            print(short_cut)
-            your_input = input(
-                '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
+                for i in range(len(short_cut[0][1:])):
+                    sc = short_cut.iloc[i, 0]
+                    substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
+                    print (substitution_list)
+                    for jj in range(len(substitution_list)):
+                        if sc + str(int(jj)) in your_input:
+                            substitution = substitution_list[jj]
+                            your_input = your_input.replace(sc, substitution)
 
-            for i in range(len(short_cut[0][1:])):
-                sc = short_cut.iloc[i, 0]
-                substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
-                print (substitution_list)
-                for jj in range(len(substitution_list)):
-                    if sc + str(int(jj)) in your_input:
-                        substitution = substitution_list[jj]
+                    if sc in your_input:
+                        substitution = random.choice(substitution_list)
                         your_input = your_input.replace(sc, substitution)
 
-                if sc in your_input:
-                    substitution = random.choice(substitution_list)
-                    your_input = your_input.replace(sc, substitution)
+
+                print ('\n[Saved] You just input: \n', your_input)
+                if 'xxx' in your_input:
+                    approve = 'Need further inspection, the phase_0 may be problematic.'
+                    if pos_list == []:
+                        pos_list = [corners]
+                elif 'rej' in your_input:
+                    approve = 'Poor quality, rejected by our manual checking.'
+                    if pos_list == []:
+                        pos_list = [corners]
+                else:
+
+                    approve = 'X'
+                    if (len(your_input)>=1 and (your_input[0] == 'Y' or your_input[0] == 'y')) or (len(your_input)>=2 and (your_input[1] == 'Y' or your_input[1] == 'y')):
+                        diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
+                        diag_destination_coord = np.linalg.norm(np.array(
+                            gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(
+                            gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
+
+                        destination_cnt = cv2.UMat(np.array(
+                            [gps_to_img_coords(x) for x in extracted_xview_landmarks[int(destination_index)][1]],
+                            dtype=np.int32))
+                        dist = cv2.pointPolygonTest(destination_cnt, np.mean(pos_list[-1], axis=0), True)
 
 
-            print ('\n[Saved] You just input: \n', your_input)
-            if 'xxx' in your_input:
-                approve = 'Need further inspection, the phase_0 may be problematic.'
-                if pos_list == []:
-                    pos_list = [corners]
-            elif 'rej' in your_input:
-                approve = 'Poor quality, rejected by our manual checking.'
-                if pos_list == []:
-                    pos_list = [corners]
-            else:
-                destination_coord = np.array(gps_to_img_coords(destination_gps))
-                starting_pix_dis_to_des = np.linalg.norm(
-                    np.array(starting_coord) - destination_coord)
-                ending_pix_dis_to_des = np.linalg.norm(
-                    np.array(np.mean(pos_list[-1], axis=0)) - destination_coord)
-
-
-                approve = 'X'
-                if (len(your_input)>=1 and (your_input[0] == 'Y' or your_input[0] == 'y')) or (len(your_input)>=2 and (your_input[1] == 'Y' or your_input[1] == 'y')):
-                    diag_view_area = 0.5 * np.linalg.norm(np.array(pos_list[-1][0]) - np.array(pos_list[-1][2]))
-                    diag_destination_coord = np.linalg.norm(np.array(
-                        gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0])) - np.array(
-                        gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2])))
-
-                    destination_cnt = cv2.UMat(np.array(
-                        [gps_to_img_coords(x) for x in extracted_xview_landmarks[int(destination_index)][1]],
-                        dtype=np.int32))
-                    dist = cv2.pointPolygonTest(destination_cnt, np.mean(pos_list[-1], axis=0), True)
-
-
-                    # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
-                    if (diag_view_area / diag_destination_coord<1.8 and diag_destination_coord/ diag_view_area<1.8) and dist >= 0:
-                        dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
-                        print ("Yes you have find it!!!\n")
-                    elif dist >= 0:
-                        print(diag_view_area, diag_destination_coord)
-                        if diag_view_area > diag_destination_coord:
-                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly lower."
-                            print ("\nAutomatic Answer: You need to fly lower.\n")
+                        # print('Debug: ', (np.abs(diag_view_area/diag_destination_coord - 1), (ending_pix_dis_to_des,min_destination_edge_coord)))
+                        if (diag_view_area / diag_destination_coord<1.8 and diag_destination_coord/ diag_view_area<1.8) and dist >= 0:
+                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: Yes you have find it!!!"
+                            print ("Yes you have find it!!!\n")
+                        elif dist >= 0:
+                            print(diag_view_area, diag_destination_coord)
+                            if diag_view_area > diag_destination_coord:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly lower."
+                                print ("\nAutomatic Answer: You need to fly lower.\n")
+                            else:
+                                dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly higher."
+                                print ("\nAutomatic Answer: You need to fly higher..\n")
+                            continue
                         else:
-                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: You need to fly higher."
-                            print ("\nAutomatic Answer: You need to fly higher..\n")
-                        continue
-                    else:
-                        dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
-                        print ("\nAutomatic Answer: Nope, you haven't get there. Ask some more questions.\n")
-                        your_input = input('Enter your new question:\n')
+                            dialog += '\n-    Question: ' + your_input + "\n-    Answer: Nope, you haven't get there. Ask some more questions."
+                            print ("\nAutomatic Answer: Nope, you haven't get there. Ask some more questions.\n")
+                            your_input = input('Enter your new question:\n')
 
-                        for i in range(len(short_cut[0][1:])):
-                            sc = short_cut.iloc[i, 0]
-                            substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
-                            print (substitution_list)
-                            for jj in range(len(substitution_list)):
-                                if sc + str(int(jj)) in your_input:
-                                    substitution = substitution_list[jj]
+                            for i in range(len(short_cut[0][1:])):
+                                sc = short_cut.iloc[i, 0]
+                                substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
+                                print (substitution_list)
+                                for jj in range(len(substitution_list)):
+                                    if sc + str(int(jj)) in your_input:
+                                        substitution = substitution_list[jj]
+                                        your_input = your_input.replace(sc, substitution)
+
+                                if sc in your_input:
+                                    substitution = random.choice(substitution_list)
                                     your_input = your_input.replace(sc, substitution)
 
-                            if sc in your_input:
-                                substitution = random.choice(substitution_list)
-                                your_input = your_input.replace(sc, substitution)
+                            print ('\n[Saved] You just input: \n', your_input)
 
-                        print ('\n[Saved] You just input: \n', your_input)
+                            dialog += '\n-    Question: ' + your_input
+
+
+                    elif len(your_input) > 0:
 
                         dialog += '\n-    Question: ' + your_input
 
 
-                elif len(your_input) > 0:
-
-                    dialog += '\n-    Question: ' + your_input
-
-
-                else:
-                    assert False
+                    else:
+                        assert False
 
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
-                         'length_of_traj': len(pos_list),
+                         'length_of_traj': length_of_traj + [len(pos_list)],
                          'angle_list': angle_list,
                          'attention_list':attention_list,
                          'dialog': dialog,
@@ -762,29 +763,6 @@ for iii in range(31,len(name_list)):
 
     compass_size_edge = int(compass_size * 0.75)
 
-    cv2.line(im_resized_copy,
-             (
-                 int(center_coord[0] + compass_size_edge * 0.35 * np.sin((angle + 135) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge * 0.35 * np.cos((angle + 135) / 180 * 3.14159))
-             ),
-             (int(center_coord[0]), int(center_coord[1])),
-             (0, 0, 255), 2 + int(size_boundary[0] / 400))
-
-    cv2.line(im_resized_copy,
-             (
-                 int(center_coord[0] + compass_size_edge * 0.35 * np.sin((angle + 225) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge * 0.35 * np.cos((angle + 225) / 180 * 3.14159))
-             ),
-             (int(center_coord[0]), int(center_coord[1])),
-             (0, 0, 255), 2 + int(size_boundary[0] / 400))
-
-    cv2.line(im_resized_copy,
-             (
-                 int(center_coord[0] + compass_size_edge*0.7 * np.sin((angle + 180) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge*0.7 * np.cos((angle + 180) / 180 * 3.14159))
-             ),
-             (int(center_coord[0]), int(center_coord[1])),
-             (0, 0, 255), 2 + int(size_boundary[0] / 400))
     # for k in range(12):
     #
     #     if k == 0 or k ==3 or k==6 or k ==9:
@@ -811,10 +789,45 @@ for iii in range(31,len(name_list)):
     #                  ),
     #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
 
-    cv2.putText(im_resized_copy, 'Forward direction', (int(center_coord[0]) ,int(center_coord[1])),
+    cv2.line(im_resized_copy,
+             (
+                 int(center_coord[0] - compass_size_edge * 0.35 * np.sin((angle + 135) / 180 * 3.14159)),
+                 int(center_coord[1] + compass_size_edge * 0.35 * np.cos((angle + 135) / 180 * 3.14159))
+             ),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
+             (0, 0, 255), 2 + int(size_boundary[0] / 400))
+
+    cv2.line(im_resized_copy,
+             (
+                 int(center_coord[0] - compass_size_edge * 0.35 * np.sin((angle + 225) / 180 * 3.14159)),
+                 int(center_coord[1] + compass_size_edge * 0.35 * np.cos((angle + 225) / 180 * 3.14159))
+             ),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
+             (0, 0, 255), 2 + int(size_boundary[0] / 400))
+
+    cv2.line(im_resized_copy,
+             (
+                 int(center_coord[0]),
+                 int(center_coord[1])
+             ),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
+             (0, 0, 255), 2 + int(size_boundary[0] / 400))
+
+    cv2.circle(im_resized_copy, (
+        int(center_coord[0]),
+        int(center_coord[1])
+    ),
+               color=(0, 0, 255), radius=4 + int(size_boundary[0] / 400), thickness=4 + int(size_boundary[0] / 400))
+    cv2.putText(im_resized_copy, 'Forward direction', (
+        int(center_coord[0] - compass_size_edge * np.sin((angle + 180) / 180 * 3.14159)),
+        int(center_coord[1] + compass_size_edge * np.cos((angle + 180) / 180 * 3.14159))
+    ),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.1 + size_boundary[0] / 1200, (0, 0, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
-    #
+
     # cv2.putText(im_resized_copy, '3',
     #             (int(center_coord[0] + compass_size * np.sin((angle + 90) / 180 * 3.14159)),
     #              int(center_coord[1] - compass_size * np.cos((angle + 90) / 180 * 3.14159))),

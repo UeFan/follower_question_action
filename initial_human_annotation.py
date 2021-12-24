@@ -30,11 +30,11 @@ import  random
 
 
 
-pre_rejected_list_df = pd.read_csv('/Users/fanyue/Downloads/Batch_4632300_batch_results.csv_second_filtered.csv')
+# pre_rejected_list_df = pd.read_csv('/Users/fanyue/Downloads/Batch_4632300_batch_results.csv_second_filtered.csv')
 
 root_folder_path = '/Users/fanyue/xview/'
 fname = root_folder_path + 'xView_train.geojson'
-df = pd.read_csv('/Users/fanyue/Downloads/TongzhouBatch_4632300_batch_results.csv.csv')
+df = pd.read_csv('/Users/fanyue/Downloads/TongzhouBatch_4635538_batch_results.csv.csv')
 short_cut = pd.read_excel('./Common questions.xlsx', index_col=None, header=0)
 
 # 710m * 400m = 16:9 # dia 815m
@@ -104,9 +104,9 @@ cv2.namedWindow('navigation viewer')
 
 for iii in range(0 ,len(name_list)):
 
-    index =  np.where(df['Input.task_image_name'][iii] == pre_rejected_list_df['Input.task_image_name'])[0][0]
-    if pre_rejected_list_df.loc[index,'Reject'] == pre_rejected_list_df.loc[index,'Reject']:
-        continue
+    # index =  np.where(df['Input.task_image_name'][iii] == pre_rejected_list_df['Input.task_image_name'])[0][0]
+    # if pre_rejected_list_df.loc[index,'Reject'] == pre_rejected_list_df.loc[index,'Reject']:
+    #     continue
 
     img_name = name_list[iii].split('/')[1] +'.tif'
     os.system('mkdir ' + root_folder_path + 'full_dataset/' + name_list[iii].split('/')[1] + '/1/')
@@ -339,10 +339,10 @@ for iii in range(0 ,len(name_list)):
     cv2.setMouseCallback("navigation viewer", click_and_draw)
     dialog = '\n Previous Dialog: \n-    Instruction: ' + complete_instruction
     while True:
-        view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)\
-                     + 0.01
-        step_change_of_view = np.array([get_a_gps_coord_at_distance(0, _zoom_speed *6*view_ratio) / lat_ratio,
-                                        get_a_gps_coord_at_distance(0, _zoom_speed / width * height *6*view_ratio) / lat_ratio])
+        view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)
+        
+        step_change_of_view = np.array([get_a_gps_coord_at_distance(0, _zoom_speed *10*view_ratio) / lat_ratio,
+                                        get_a_gps_coord_at_distance(0, _zoom_speed / width * height *10*view_ratio) / lat_ratio])
 
         count_frame += 1
         cv2.line(im_view, (compass_pos,compass_pos), (int(compass_pos+20*np.sin(-angle/180*3.14159)), int(compass_pos-20*np.cos(-angle/180*3.14159))),(255,255,255), 2)
