@@ -133,6 +133,8 @@ for iii in range(0 ,len(name_list)):
     complete_instruction = df['Answer.tag'][iii]
     print('【Reminder】: \n1. Refer the given instruction.\n2. Draw green circle (ROI).\n3. Use at least one shortcut.')
     print ('\n 【Instruction】: ',complete_instruction)
+    if complete_instruction != complete_instruction:
+        complete_instruction = ' '
     ### Get the boundary coords. The gps coords will be lat,long
 
 
@@ -340,7 +342,7 @@ for iii in range(0 ,len(name_list)):
     dialog = '\n Previous Dialog: \n-    Instruction: ' + complete_instruction
     while True:
         view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)
-        
+
         step_change_of_view = np.array([get_a_gps_coord_at_distance(0, _zoom_speed *10*view_ratio) / lat_ratio,
                                         get_a_gps_coord_at_distance(0, _zoom_speed / width * height *10*view_ratio) / lat_ratio])
 
