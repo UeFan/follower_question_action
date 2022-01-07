@@ -23,18 +23,19 @@ def img_to_gps_coords(img_c):
 dialog_phase = 1
 root_folder_path = '/Users/fanyue/xview/'
 
-result_csv = 'Batch_4632300_batch_results.csv'
-df = pd.read_csv('/Users/fanyue/Downloads/' + result_csv)
+result_csv = '0_AMT_full_dataset.csv'
+df = pd.read_csv(root_folder_path + result_csv)
 name_list = []
-for i in df['Input.task_image_name']:
+for i in df['task_image_name']:
     name_list.append(i.replace('image_sample_', '').replace('.jpg',''))
 
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
 
-for iii in range(0 ,len(df['Input.task_image_name'])):
-
-
+for iii in range(0 ,len(df['task_image_name'])):
+    print(iii, '!!!: ', df['task_image_name'][iii])
+    # if not '1449' in df['task_image_name'][iii]:
+    #     continue
     if os.path.exists(
             root_folder_path + name_list[iii].replace('/' + str(0) + '/', '/' + str(dialog_phase) + '/') + "_" + str(
                     dialog_phase) + ".pickle") and os.path.exists(

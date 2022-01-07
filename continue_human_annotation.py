@@ -32,13 +32,16 @@ import random
 
 dialog_phase = 1
 root_folder_path = '/Users/fanyue/xview/'
-df = pd.read_csv('/Users/fanyue/Downloads/Batch_4594154_batch_results.csv')
-short_cut = pd.read_excel('/Users/fanyue/Downloads/Common questions.xlsx', index_col=0, header=0)
+df = pd.read_csv('/Users/fanyue/Downloads/Batch_4642872_batch_results.csv')
+short_cut = pd.read_excel('./Common questions.xlsx', index_col=None, header=0)
+
 # 710m * 400m = 16:9
 # 142 * 80
+
 max_view = np.array([400,400])
 min_view = np.array([40,40])
 # def zoom_in_out(event, x, y, flags, param):b
+
 
 def polygon_area(points):
     hull = spt.ConvexHull(points=points)
@@ -54,8 +57,6 @@ def get_a_gps_coord_at_distance(a, b):
 
 def gps_to_img_coords(gps):
     return int(round((gps[1] - gps_botm_left[1]) / lat_ratio)), int(round((gps_top_right[0] - gps[0]) / lat_ratio))
-
-
 
 
 def img_to_gps_coords(img_c):
@@ -168,7 +169,7 @@ def click_and_draw(event, x, y, flags, param):
 
 cv2.setMouseCallback("navigation viewer", click_and_draw)
 
-for iii in range(31,len(name_list)):
+for iii in range(0,len(name_list)):
 
 
     img_name = name_list[iii].split('/')[1] +'.tif'
@@ -176,7 +177,7 @@ for iii in range(31,len(name_list)):
     print('folder created: ',root_folder_path + 'full_dataset/' + name_list[iii].split('/')[1] + '/'+str(dialog_phase+1)+'/')
     print('Load pickle: ', root_folder_path + name_list[iii].replace('/'+str(dialog_phase-1)+'/','/'+ str(dialog_phase) +'/')+".pickle")
 
-    p_dic = pickle.load( open( root_folder_path  + 'full_dataset/' +  name_list[iii].split('/')[0] + '/0/' +img_name+".pickle", "rb" ) )
+    p_dic = pickle.load( open( root_folder_path  + 'full_dataset/' +  name_list[iii].split('/')[1] + '/0/' +img_name+".pickle", "rb" ) )
 
     extracted_landmarks = p_dic['extracted_landmarks']
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
@@ -244,10 +245,10 @@ for iii in range(31,len(name_list)):
     starting_coord = np.mean(pos_list[0], axis = 0)
 
 
-    if df['Answer.tag_1'][iii] == df['Answer.tag_1'][iii]:
-        answer = df['Answer.tag_0'][iii]+df['Answer.tag_1'][iii]
-    else:
-        answer = df['Answer.tag_0'][iii]
+    # if df['Answer.tag_1'][iii] == df['Answer.tag_1'][iii]:
+    #     answer = df['Answer.tag_0'][iii]+df['Answer.tag_1'][iii]
+    # else:
+    answer = df['Answer.tag_0'][iii]
 
     dialog += '\n-    Answer: ' + answer
     # print ('\n Previous Dialog: ', complete_instruction)
@@ -283,7 +284,7 @@ for iii in range(31,len(name_list)):
     corners = pos_list[-1]
 
     # angle = 0
-    width = 1280
+    width = 720
     height = 720
     dst_pts = np.array([[0, 0],
                         [width - 1, 0],

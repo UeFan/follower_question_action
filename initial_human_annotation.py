@@ -62,7 +62,6 @@ def gps_to_img_coords(gps):
     return int(round((gps[1] - gps_botm_left[1]) / lat_ratio)), int(round((gps_top_right[0] - gps[0]) / lat_ratio))
 
 
-
 def img_to_gps_coords(img_c):
     return np.array([gps_top_right[0] - lat_ratio * img_c[1], gps_botm_left[1] + lat_ratio * img_c[0]])
 
