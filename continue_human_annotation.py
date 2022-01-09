@@ -179,6 +179,7 @@ for iii in range(0,len(name_list)):
 
     p_dic = pickle.load( open( root_folder_path  + 'full_dataset/' +  name_list[iii].split('/')[1] + '/0/' +img_name+".pickle", "rb" ) )
 
+    angle_list = [round(p_dic['angle'])]
     extracted_landmarks = p_dic['extracted_landmarks']
     extracted_xview_landmarks=p_dic['extracted_xview_landmarks']
 
@@ -225,7 +226,10 @@ for iii in range(0,len(name_list)):
     length_of_traj = p_dic['length_of_traj']
     if type(length_of_traj) != type([]):
         length_of_traj = [length_of_traj]
-    angle_list = p_dic['angle_list']
+
+    # In case in previous traj no angle is recorded. 
+    if len(p_dic['angle_list']) != 0:
+        angle_list = p_dic['angle_list']
     action_list = p_dic['action_list']
     attention_list = p_dic['attention_list']
     step_change_of_view_zoom = p_dic['step_change_of_view_zoom']
