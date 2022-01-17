@@ -34,8 +34,8 @@ cv2.namedWindow('navigation viewer')
 
 for iii in range(0 ,len(df['task_image_name'])):
     print(iii, '!!!: ', df['task_image_name'][iii])
-    # if not '1449' in df['task_image_name'][iii]:
-    #     continue
+    if not '/10/' in df['task_image_name'][iii]:
+        continue
     if os.path.exists(
             root_folder_path + name_list[iii].replace('/' + str(0) + '/', '/' + str(dialog_phase) + '/') + "_" + str(
                     dialog_phase) + ".pickle") and os.path.exists(

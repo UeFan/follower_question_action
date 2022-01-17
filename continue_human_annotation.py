@@ -395,7 +395,7 @@ for iii in range(0,len(name_list)):
                 your_input = input(
                     '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
 
-                for i in range(len(short_cut[0][1:])):
+                for i in range(len(short_cut[0][:])):
                     sc = short_cut.iloc[i, 0]
                     substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
                     print (substitution_list)
@@ -451,7 +451,7 @@ for iii in range(0,len(name_list)):
                             print ("\nAutomatic Answer: Nope, you haven't get there. Ask some more questions.\n")
                             your_input = input('Enter your new question:\n')
 
-                            for i in range(len(short_cut[0][1:])):
+                            for i in range(len(short_cut[0][:])):
                                 sc = short_cut.iloc[i, 0]
                                 substitution_list = [j for j in short_cut.iloc[i, 2:] if j == j]
                                 print (substitution_list)
