@@ -33,12 +33,14 @@ for i in df['task_image_name']:
 cv2.namedWindow('navigation viewer')
 
 for iii in range(0 ,len(df['task_image_name'])):
-    print(iii, '!!!: ', df['task_image_name'][iii])
-    if not '/10/' in df['task_image_name'][iii]:
+
+    if not os.path.exists(root_folder_path + df['task_image_name'][iii]):
+        print(iii, '!!!: ', df['task_image_name'][iii])
         continue
     if os.path.exists(
             root_folder_path + name_list[iii].replace('/' + str(0) + '/', '/' + str(dialog_phase) + '/') + "_" + str(
-                    dialog_phase) + ".pickle") and os.path.exists(
+                    dialog_phase) + ".pickle") \
+        and os.path.exists(
             root_folder_path + name_list[iii].replace('/' + str(0) + '/',
                                                       '/' + str(dialog_phase) + '/image_sample_') + "_" + str(
                     dialog_phase) + ".jpg"):
@@ -57,6 +59,9 @@ for iii in range(0 ,len(df['task_image_name'])):
         p_dic = pickle.load(open(root_folder_path + name_list[iii].replace('/' + str(dialog_phase - 1) + '/',
                                                                            '/' + str(dialog_phase) + '/') + '_' + str(dialog_phase) + ".pickle",
                                  "rb"))
+
+
+        print(adsfa)
         pos_list = p_dic['pos_list']
         length_of_traj = p_dic['length_of_traj']
         if type(length_of_traj) != type([]):
