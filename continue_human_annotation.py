@@ -30,7 +30,7 @@ import random
 
 
 
-dialog_phase = 1
+dialog_phase = 2
 root_folder_path = '/Users/fanyue/xview/'
 df = pd.read_csv('/Users/fanyue/Downloads/Batch_4642872_batch_results.csv')
 short_cut = pd.read_excel('./Common questions.xlsx', index_col=None, header=0)
@@ -231,8 +231,11 @@ for iii in range(0,len(name_list)):
     angle_list = p_dic['angle_list']
     action_list = p_dic['action_list']
     attention_list = p_dic['attention_list']
-    step_change_of_view_zoom = p_dic['step_change_of_view_zoom']
-    lng_ratio = p_dic['lng_ratio']
+    width = 720
+    height = 720
+    _zoom_speed = 8
+    step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, _zoom_speed / 2) / lat_ratio,
+                                         get_a_gps_coord_at_distance(0, _zoom_speed / width * height / 2) / lat_ratio])    lng_ratio = p_dic['lng_ratio']
     lat_ratio = p_dic['lat_ratio']
     gps_botm_left = p_dic['gps_botm_left']
     gps_top_right = p_dic['gps_top_right']
