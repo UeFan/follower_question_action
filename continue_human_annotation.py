@@ -227,16 +227,17 @@ for iii in range(0,len(name_list)):
     if type(length_of_traj) != type([]):
         length_of_traj = [length_of_traj]
 
-
     angle_list = p_dic['angle_list']
     action_list = p_dic['action_list']
     attention_list = p_dic['attention_list']
+    lng_ratio = p_dic['lng_ratio']
+    lat_ratio = p_dic['lat_ratio']
     width = 720
     height = 720
     _zoom_speed = 8
     step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, _zoom_speed / 2) / lat_ratio,
-                                         get_a_gps_coord_at_distance(0, _zoom_speed / width * height / 2) / lat_ratio])    lng_ratio = p_dic['lng_ratio']
-    lat_ratio = p_dic['lat_ratio']
+                                         get_a_gps_coord_at_distance(0, _zoom_speed / width * height / 2) / lat_ratio])
+
     gps_botm_left = p_dic['gps_botm_left']
     gps_top_right = p_dic['gps_top_right']
     dialog = p_dic['dialog']
@@ -293,8 +294,7 @@ for iii in range(0,len(name_list)):
     corners = pos_list[-1]
 
     # angle = 0
-    width = 720
-    height = 720
+
     dst_pts = np.array([[0, 0],
                         [width - 1, 0],
                         [width - 1, height - 1],
