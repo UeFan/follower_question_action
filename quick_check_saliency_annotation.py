@@ -53,7 +53,7 @@ for i in range(len(new_data)):
     sub_traj_id_to_idx[int(item['map_name'])][int(item['route_index'].split('_')[0])][
         int(item['route_index'].split('_')[1])] = i
 
-name_list = sub_traj_id_to_idx.keys()
+name_list = list(sub_traj_id_to_idx.keys())
 
 # open a opencv window and display the initial view
 cv2.namedWindow('navigation viewer')
@@ -246,7 +246,7 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for q in range(len(list(name_list))):
+for q in range(len(name_list)):
     iii = name_list[q]
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
