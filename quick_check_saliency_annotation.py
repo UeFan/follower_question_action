@@ -245,7 +245,7 @@ def autoAdjustments_with_convertScaleAbs(img):
     new_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
 
     return new_img
-
+count_i = 0
 for iii in name_list:
 
     for ii in sub_traj_id_to_idx[iii].keys():
@@ -275,7 +275,8 @@ for iii in name_list:
 
             starting_coord = np.mean(pos_list[0], axis=0)
 
-
+            count_i += 1
+            print('# ', count_i)
             print('\niii: ', iii, 'ii: ', ii)
             dialog = dialog.replace('[', '\n[')
             print(dialog)
@@ -414,9 +415,9 @@ for iii in name_list:
         for k in attention_list:
 
             gps_attention.append([img_to_gps_coords(k[0]), k[1]])
-            print(gps_attention[-1])
+            # print(gps_attention[-1])
 
-        pickle.dump(gps_attention, open(str(iii) + '_' + str(ii) + '.pickle', 'wb'))
+        pickle.dump(gps_attention, open(root_folder_path + str(iii) + '_' + str(ii) + '.pickle', 'wb'))
 
 
 
