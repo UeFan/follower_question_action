@@ -246,7 +246,7 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for q in name_list:
+for q in range(len(list(name_list))):
     iii = name_list[q]
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
@@ -277,7 +277,7 @@ for q in name_list:
 
             count_i += 1
             print('# ', count_i)
-            print('\niii: ', iii, 'ii: ', ii)
+            print('\n q:', q, 'iii: ', iii, 'ii: ', ii)
             dialog = dialog.replace('[', '\n[')
             print(dialog)
             print()
