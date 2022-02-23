@@ -246,8 +246,8 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for iii in name_list:
-
+for q in name_list:
+    iii = name_list[q]
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
         attention_list = []
