@@ -246,13 +246,17 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for q in range(len(name_list)):
+for q in range(0 ,len(name_list)):
     iii = name_list[q]
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
         attention_list = []
         for i in range(1, np.max(list(sub_traj_id_to_idx[iii][ii].keys())) + 1):
             p_dic = new_data[sub_traj_id_to_idx[iii][ii][i]]
+            lng_ratio = p_dic['lng_ratio']
+            lat_ratio = p_dic['lat_ratio']
+            gps_botm_left = p_dic['gps_botm_left']
+            gps_top_right = p_dic['gps_top_right']
             attention_list += p_dic['attention_list']
         for i in range(len(attention_list)):
             attention_list[i][0] = gps_to_img_coords(attention_list[i][0])
