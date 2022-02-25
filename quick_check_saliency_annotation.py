@@ -45,6 +45,7 @@ sub_traj_id_to_idx = {}
 
 for i in range(len(new_data)):
     item = new_data[i]
+    
     # print([int(item['map_name']), int(item['route_index'].split('_')[0]), int(item['route_index'].split('_')[1])])
     sub_traj_id_to_idx[int(item['map_name'])] = sub_traj_id_to_idx.get(int(item['map_name']), {})
     sub_traj_id_to_idx[int(item['map_name'])][int(item['route_index'].split('_')[0])] = \
@@ -144,7 +145,7 @@ def click_and_draw(event, x, y, flags, param):
             t_p = 0
             for u in dialog.split('\n'):
                 if len(u) > 100:
-                    for q in range(0, len(u), 100):
+                    for qq in range(0, len(u), 100):
                         t_p += 50
                         cv2.putText(a, u[q:q + 100], (
                             0, t_p
@@ -246,7 +247,7 @@ def click_and_draw(event, x, y, flags, param):
         t_p = 0
         for u in dialog.split('\n'):
             if len(u) > 100:
-                for q in range(0, len(u), 100):
+                for qq in range(0, len(u), 100):
                     t_p += 50
                     cv2.putText(a, u[q:q + 100], (
                         0, t_p
@@ -449,9 +450,9 @@ for q in range(155 ,len(name_list)):
             t_p = 0
             for u in dialog.split('\n'):
                 if len(u) > 100:
-                    for q in range(0, len(u), 100):
+                    for qq in range(0, len(u), 100):
                         t_p += 50
-                        cv2.putText(a, u[q:q+100], (
+                        cv2.putText(a, u[qq:qq+100], (
                             0, t_p
                         ),
                                     cv2.FONT_HERSHEY_SIMPLEX,
