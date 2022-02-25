@@ -139,7 +139,26 @@ def click_and_draw(event, x, y, flags, param):
                 ),
                            color=(0, 255, 0), radius=attention_list[i][1],
                            thickness=4 + int(size_boundary[0] / 400))
-            cv2.imshow('navigation viewer', im_resized)
+
+            a = np.zeros((1000, im_resized.shape[1], 3), dtype=np.uint8)
+            t_p = 0
+            for u in dialog.split('\n'):
+                if len(u) > 100:
+                    for q in range(0, len(u), 100):
+                        t_p += 50
+                        cv2.putText(a, u[q:q + 100], (
+                            0, t_p
+                        ),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    1.7, (255, 255, 255), 2)
+                else:
+                    t_p += 50
+                    cv2.putText(a, u, (
+                        0, t_p
+                    ),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                1.7, (255, 255, 255), 2)
+            cv2.imshow('navigation viewer', np.vstack((im_resized, a)))
 
     if event == cv2.EVENT_LBUTTONDOWN:
         # print(angle, _angle (y/height)*(corners[3][1]-corners[0][1])*np.sin(-angle/ 180 * 3.14159),(x/width)*(corners[1][0]-corners[0][0])*np.sin(angle/ 180 * 3.14159), (x/width)*(corners[1][0]-corners[0][0])*np.cos(angle/ 180 * 3.14159), (y/height)*(corners[3][1]-corners[0][1])*np.cos(angle/ 180 * 3.14159))
@@ -223,15 +242,31 @@ def click_and_draw(event, x, y, flags, param):
                        color=(0, 255, 0), radius=attention_list[i][1],
                        thickness=4 + int(size_boundary[0] / 400))
 
-
-
-
-
-
-        cv2.imshow('navigation viewer', im_resized)
+        a = np.zeros((1000, im_resized.shape[1], 3), dtype=np.uint8)
+        t_p = 0
+        for u in dialog.split('\n'):
+            if len(u) > 100:
+                for q in range(0, len(u), 100):
+                    t_p += 50
+                    cv2.putText(a, u[q:q + 100], (
+                        0, t_p
+                    ),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                1.7, (255, 255, 255), 2)
+            else:
+                t_p += 50
+                cv2.putText(a, u, (
+                    0, t_p
+                ),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            1.7, (255, 255, 255), 2)
+        cv2.imshow('navigation viewer', np.vstack((im_resized, a)))
 
 
 cv2.setMouseCallback("navigation viewer", click_and_draw)
+
+global gps_botm_left, gps_top_right
+
 def autoAdjustments_with_convertScaleAbs(img):
     alow = img.min()-30
     ahigh = img.max()
@@ -246,7 +281,7 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for q in range(0 ,len(name_list)):
+for q in range(155 ,len(name_list)):
     iii = name_list[q]
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
@@ -259,6 +294,7 @@ for q in range(0 ,len(name_list)):
             gps_top_right = p_dic['gps_top_right']
             attention_list += p_dic['attention_list']
         for i in range(len(attention_list)):
+            # print(attention_list)
             attention_list[i][0] = gps_to_img_coords(attention_list[i][0])
 
 
@@ -409,8 +445,25 @@ for q in range(0 ,len(name_list)):
                            color=(0, 255, 0), radius=attention_list[i][1],
                            thickness=4 + int(size_boundary[0] / 400))
 
-            cv2.imshow('navigation viewer',
-                        im_resized)
+            a = np.zeros((1000, im_resized.shape[1], 3), dtype=np.uint8)
+            t_p = 0
+            for u in dialog.split('\n'):
+                if len(u) > 100:
+                    for q in range(0, len(u), 100):
+                        t_p += 50
+                        cv2.putText(a, u[q:q+100], (
+                            0, t_p
+                        ),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    1.7, (255, 255, 255), 2)
+                else:
+                    t_p+=50
+                    cv2.putText(a, u, (
+                        0, t_p
+                    ),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                1.7, (255, 255, 255), 2)
+            cv2.imshow('navigation viewer', np.vstack((im_resized, a)))
 
 
             k = cv2.waitKey(0)
