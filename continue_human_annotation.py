@@ -99,75 +99,6 @@ for i in df['Input.task_image_name']:
 cv2.namedWindow('navigation viewer')
 
 
-def click_and_draw(event, x, y, flags, param):
-    # grab references to the global variables
-    global refPt, cropping
-    # if the left mouse button was clicked, record the starting
-    # (x, y) coordinates and indicate that cropping is being
-    # performed
-    if event == cv2.EVENT_LBUTTONDOWN:
-        # print(angle, _angle (y/height)*(corners[3][1]-corners[0][1])*np.sin(-angle/ 180 * 3.14159),(x/width)*(corners[1][0]-corners[0][0])*np.sin(angle/ 180 * 3.14159), (x/width)*(corners[1][0]-corners[0][0])*np.cos(angle/ 180 * 3.14159), (y/height)*(corners[3][1]-corners[0][1])*np.cos(angle/ 180 * 3.14159))
-        # ((corners[1][0]-corners[0][0]), (corners[3][1]-corners[0][1])), corners[0],(int((x/width)*(corners[1][0]-corners[0][0])*np.cos(angle)+corners[0][0]), int((y/height)*(corners[3][1]-corners[0][1])*np.cos(angle)+corners[0][1]))
-
-        cv2.circle(im_resized,
-                   (int((x / width) * np.linalg.norm(corners[1] - corners[0]) * np.cos(angle / 180 * 3.14159) - (
-                               y / height) * np.linalg.norm(corners[3] - corners[0]) * np.sin(angle / 180 * 3.14159) +
-                        corners[0][0]),
-                    int((y / height) * np.linalg.norm(corners[3] - corners[0]) * np.cos(angle / 180 * 3.14159) + (
-                                x / width) * np.linalg.norm(corners[1] - corners[0]) * np.sin(angle / 180 * 3.14159) +
-                        corners[0][1])),
-                   int(np.linalg.norm(corners[1] - corners[0]) * 0.09), (0, 255, 0),
-                   2)
-        im_view = cv2.warpPerspective(im_resized, M, (width, height))
-
-        cv2.line(im_view, (compass_pos, compass_pos), (int(compass_pos + 20 * np.sin(-angle / 180 * 3.14159)),
-                                                       int(compass_pos - 20 * np.cos(-angle / 180 * 3.14159))),
-                 (255, 255, 255), 2)
-        cv2.putText(im_view, 'N', (int(compass_pos + compass_size * np.sin(-angle / 180 * 3.14159)),
-                                   int(compass_pos - compass_size * np.cos(-angle / 180 * 3.14159))),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5, (255, 255, 255), 1, cv2.LINE_AA)
-
-        cv2.line(im_view, (compass_pos, compass_pos), (
-            int(compass_pos + 20 * np.sin((-angle + 90) / 180 * 3.14159)),
-            int(compass_pos - 20 * np.cos((-angle + 90) / 180 * 3.14159))),
-                 (255, 255, 255), 2)
-        cv2.putText(im_view, 'E',
-                    (int(compass_pos + compass_size * np.sin((-angle + 90) / 180 * 3.14159)),
-                     int(compass_pos - compass_size * np.cos((-angle + 90) / 180 * 3.14159))),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5, (255, 255, 255), 1, cv2.LINE_AA)
-
-        cv2.line(im_view, (compass_pos, compass_pos), (
-            int(compass_pos + 20 * np.sin((-angle + 180) / 180 * 3.14159)),
-            int(compass_pos - 20 * np.cos((-angle + 180) / 180 * 3.14159))),
-                 (255, 255, 255), 2)
-        cv2.putText(im_view, 'S',
-                    (int(compass_pos + compass_size * np.sin((-angle + 180) / 180 * 3.14159)),
-                     int(compass_pos - compass_size * np.cos((-angle + 180) / 180 * 3.14159))),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5, (255, 255, 255), 1, cv2.LINE_AA)
-
-        cv2.line(im_view, (compass_pos, compass_pos), (
-            int(compass_pos + 20 * np.sin((-angle + 270) / 180 * 3.14159)),
-            int(compass_pos - 20 * np.cos((-angle + 270) / 180 * 3.14159))),
-                 (255, 255, 255), 2)
-        cv2.putText(im_view, 'W',
-                    (int(compass_pos + compass_size * np.sin((-angle + 270) / 180 * 3.14159)),
-                     int(compass_pos - compass_size * np.cos((-angle + 270) / 180 * 3.14159))),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5, (255, 255, 255), 1, cv2.LINE_AA)
-
-        cv2.line(im_view, (int(width / 2 - 85), int(height / 2)), (int(width / 2 + 85), int(height / 2)),
-                 (0, 0, 255), 1)
-
-        cv2.line(im_view, (int(width / 2), int(height / 2 - 85)), (int(width / 2), int(height / 2 + 85)),
-                 (0, 0, 255), 1)
-
-        cv2.imshow('navigation viewer', im_view)
-
-
-cv2.setMouseCallback("navigation viewer", click_and_draw)
 
 for iii in range(0,len(name_list)):
 
@@ -312,6 +243,84 @@ for iii in range(0,len(name_list)):
     compass_size = 50
     count_frame = 0
 
+
+    def click_and_draw(event, x, y, flags, param):
+        # grab references to the global variables
+        global refPt, cropping
+        # if the left mouse button was clicked, record the starting
+        # (x, y) coordinates and indicate that cropping is being
+        # performed
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # print(angle, _angle (y/height)*(corners[3][1]-corners[0][1])*np.sin(-angle/ 180 * 3.14159),(x/width)*(corners[1][0]-corners[0][0])*np.sin(angle/ 180 * 3.14159), (x/width)*(corners[1][0]-corners[0][0])*np.cos(angle/ 180 * 3.14159), (y/height)*(corners[3][1]-corners[0][1])*np.cos(angle/ 180 * 3.14159))
+            # ((corners[1][0]-corners[0][0]), (corners[3][1]-corners[0][1])), corners[0],(int((x/width)*(corners[1][0]-corners[0][0])*np.cos(angle)+corners[0][0]), int((y/height)*(corners[3][1]-corners[0][1])*np.cos(angle)+corners[0][1]))
+
+            cv2.circle(im_resized,
+                       (int((x / width) * np.linalg.norm(corners[1] - corners[0]) * np.cos(angle / 180 * 3.14159) - (
+                               y / height) * np.linalg.norm(corners[3] - corners[0]) * np.sin(angle / 180 * 3.14159) +
+                            corners[0][0]),
+                        int((y / height) * np.linalg.norm(corners[3] - corners[0]) * np.cos(angle / 180 * 3.14159) + (
+                                x / width) * np.linalg.norm(corners[1] - corners[0]) * np.sin(angle / 180 * 3.14159) +
+                            corners[0][1])),
+                       int(np.linalg.norm(corners[1] - corners[0]) * 0.09), (0, 255, 0),
+                       2)
+            im_view = cv2.warpPerspective(im_resized, M, (width, height))
+
+            cv2.line(im_view, (compass_pos, compass_pos), (int(compass_pos + 20 * np.sin(-angle / 180 * 3.14159)),
+                                                           int(compass_pos - 20 * np.cos(-angle / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'N', (int(compass_pos + compass_size * np.sin(-angle / 180 * 3.14159)),
+                                       int(compass_pos - compass_size * np.cos(-angle / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+                int(compass_pos + 20 * np.sin((-angle + 90) / 180 * 3.14159)),
+                int(compass_pos - 20 * np.cos((-angle + 90) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'E',
+                        (int(compass_pos + compass_size * np.sin((-angle + 90) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 90) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+                int(compass_pos + 20 * np.sin((-angle + 180) / 180 * 3.14159)),
+                int(compass_pos - 20 * np.cos((-angle + 180) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'S',
+                        (int(compass_pos + compass_size * np.sin((-angle + 180) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 180) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (compass_pos, compass_pos), (
+                int(compass_pos + 20 * np.sin((-angle + 270) / 180 * 3.14159)),
+                int(compass_pos - 20 * np.cos((-angle + 270) / 180 * 3.14159))),
+                     (255, 255, 255), 2)
+            cv2.putText(im_view, 'W',
+                        (int(compass_pos + compass_size * np.sin((-angle + 270) / 180 * 3.14159)),
+                         int(compass_pos - compass_size * np.cos((-angle + 270) / 180 * 3.14159))),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            cv2.line(im_view, (int(width / 2 - 85), int(height / 2)), (int(width / 2 + 85), int(height / 2)),
+                     (0, 0, 255), 1)
+
+            cv2.line(im_view, (int(width / 2), int(height / 2 - 85)), (int(width / 2), int(height / 2 + 85)),
+                     (0, 0, 255), 1)
+
+            cv2.imshow('navigation viewer', im_view)
+            attention_list.append([(int(
+                (x / width) * np.linalg.norm(corners[1] - corners[0]) * np.cos(angle / 180 * 3.14159) - (
+                            y / height) * np.linalg.norm(corners[3] - corners[0]) * np.sin(angle / 180 * 3.14159) +
+                corners[0][0]),
+                                    int((y / height) * np.linalg.norm(corners[3] - corners[0]) * np.cos(
+                                        angle / 180 * 3.14159) + (x / width) * np.linalg.norm(
+                                        corners[1] - corners[0]) * np.sin(angle / 180 * 3.14159) + corners[0][1])),
+                                   int(np.linalg.norm(corners[1] - corners[0]) * 0.09)])
+
+
+    cv2.setMouseCallback("navigation viewer", click_and_draw)
     while True:
         view_ratio = np.linalg.norm(img_to_gps_coords(corners[0]) - img_to_gps_coords(corners[1])) / (max_view[0]/11.13/1e4)\
                      + 0.01

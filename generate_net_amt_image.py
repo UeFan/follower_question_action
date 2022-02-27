@@ -38,15 +38,18 @@ for iii in range(0, len(df['task_image_name'])):
     map_folder_path = root_folder_path + df['task_image_name'][iii].split('/0/')[0]
     phase_folder_name = [n for n in os.listdir(map_folder_path) if n[0] != '.' and n[0] != 'I']
     last_phase = max([int(i) for i in phase_folder_name])
+    if last_phase != 3:
+        continue
 
     if not os.path.exists(root_folder_path + df['task_image_name'][iii]):
         print(iii, '!!!: ', df['task_image_name'][iii])
         continue
-    for j in range(last_phase, 0, -1):
-        if os.path.exists(root_folder_path + name_list[iii].replace('/0/', '/' + str(dialog_phase) + '/') + '_' + str(
-                dialog_phase) + ".pickle"):
-            dialog_phase = j
-            break
+    # for j in range(last_phase, 0, -1):
+    #     if os.path.exists(root_folder_path + name_list[iii].replace('/0/', '/' + str(j) + '/') + '_' + str(
+    #             j) + ".pickle"):
+    #         dialog_phase = j
+    #         break
+    dialog_phase = last_phase
     if os.path.exists(
             root_folder_path + name_list[iii].replace('/0/', '/' + str(dialog_phase) + '/') + "_" + str(
                 dialog_phase) + ".pickle") \

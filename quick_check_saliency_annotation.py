@@ -294,6 +294,11 @@ for q in range(155 ,len(name_list)):
             gps_botm_left = p_dic['gps_botm_left']
             gps_top_right = p_dic['gps_top_right']
             attention_list += p_dic['attention_list']
+
+        if os.path.exists(root_folder_path + str(iii) + '_' + str(ii) + '.pickle'):
+            attention_list = pickle.load(open(root_folder_path + str(iii) + '_' + str(ii) + '.pickle', 'rb'))
+
+
         for i in range(len(attention_list)):
             # print(attention_list)
             attention_list[i][0] = gps_to_img_coords(attention_list[i][0])
