@@ -479,16 +479,14 @@ for iii in range(0,len(name_list)):
                             print ('\n[Saved] You just input: \n', your_input)
 
                             dialog += '\n-    Question: ' + your_input
-
-
                     elif len(your_input) > 0:
-
                         dialog += '\n-    Question: ' + your_input
-
 
                     else:
                         assert False
-
+            print()
+            print()
+            print()
             pickle.dump({'action_list': action_list,
                          'pos_list': pos_list,
                          'length_of_traj': length_of_traj + [len(pos_list)],
@@ -782,31 +780,6 @@ for iii in range(0,len(name_list)):
 
     compass_size_edge = int(compass_size * 0.75)
 
-    # for k in range(12):
-    #
-    #     if k == 0 or k ==3 or k==6 or k ==9:
-    #         cv2.line(im_resized_copy,
-    #                  (
-    #                      int(center_coord[0] + compass_size_edge * 1.4 * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_edge * 1.4 * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (
-    #                      int(center_coord[0] + compass_size_center * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_center * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
-    #
-    #     else:
-    #         cv2.line(im_resized_copy,
-    #                  (
-    #                      int(center_coord[0] + compass_size_edge * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_edge * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (
-    #                      int(center_coord[0] + compass_size_center * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_center * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
 
     cv2.line(im_resized_copy,
              (
@@ -846,24 +819,6 @@ for iii in range(0,len(name_list)):
     ),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.1 + size_boundary[0] / 1200, (0, 0, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
-
-    # cv2.putText(im_resized_copy, '3',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 90) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 90) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
-    #
-    # cv2.putText(im_resized_copy, '6',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 180) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 180) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
-    #
-    # cv2.putText(im_resized_copy, '9',
-    #             (int(center_coord[0] + compass_size * np.sin((angle + 270) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle + 270) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 1200, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
 
     cv2.putText(im_resized_copy, 'current view area', np.array(np.min(pos_list[-1],axis = 0),dtype=np.int32),
                 cv2.FONT_HERSHEY_SIMPLEX,

@@ -34,7 +34,7 @@ import  random
 
 root_folder_path = '/Users/fanyue/xview/'
 fname = root_folder_path + 'xView_train.geojson'
-df = pd.read_csv('/Users/fanyue/Downloads/TongzhouBatch_4635538_batch_results.csv.csv')
+df = pd.read_csv('/Users/fanyue/Downloads/AVDN_csv_downloads/supp_demo.csv')
 short_cut = pd.read_excel('./Common questions.xlsx', index_col=None, header=0)
 
 # 710m * 400m = 16:9 # dia 815m
@@ -216,7 +216,7 @@ for iii in range(0 ,len(name_list)):
     width = 720
     height = 720
 
-    _zoom_speed = 8
+    _zoom_speed = 5
     step_change_of_view_zoom = np.array([get_a_gps_coord_at_distance(0, _zoom_speed/ 2)/lat_ratio, get_a_gps_coord_at_distance(0, _zoom_speed/width*height/ 2)/lat_ratio])
 
     # step_change_of_view_move = get_a_gps_coord_at_distance(0, 10)/lat_ratio
@@ -423,7 +423,7 @@ for iii in range(0 ,len(name_list)):
                 your_input = ''
 
             else:
-                print(short_cut)
+                # print(short_cut)
                 your_input = input(
                     '\nEnter your question. Or input rej to reject. Or input sentence starting with y to claim the destination.\n')
 
@@ -800,106 +800,51 @@ for iii in range(0 ,len(name_list)):
 
     compass_size_edge = int(compass_size * 0.75)
 
+
     cv2.line(im_resized_copy,
              (
-                 int(center_coord[0] + compass_size_edge * 0.35 * np.sin((angle + 135) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge * 0.35 * np.cos((angle + 135) / 180 * 3.14159))
+                 int(center_coord[0] - compass_size_edge * 0.35 * np.sin((angle + 135) / 180 * 3.14159)),
+                 int(center_coord[1] + compass_size_edge * 0.35 * np.cos((angle + 135) / 180 * 3.14159))
              ),
-             (int(center_coord[0]), int(center_coord[1])),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
              (0, 0, 255), 2 + int(size_boundary[0] / 400))
 
     cv2.line(im_resized_copy,
              (
-                 int(center_coord[0] + compass_size_edge * 0.35 * np.sin((angle + 225) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge * 0.35 * np.cos((angle + 225) / 180 * 3.14159))
+                 int(center_coord[0] - compass_size_edge * 0.35 * np.sin((angle + 225) / 180 * 3.14159)),
+                 int(center_coord[1] + compass_size_edge * 0.35 * np.cos((angle + 225) / 180 * 3.14159))
              ),
-             (int(center_coord[0]), int(center_coord[1])),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
              (0, 0, 255), 2 + int(size_boundary[0] / 400))
 
     cv2.line(im_resized_copy,
              (
-                 int(center_coord[0] + compass_size_edge*0.7 * np.sin((angle + 180) / 180 * 3.14159)),
-                 int(center_coord[1] - compass_size_edge*0.7 * np.cos((angle + 180) / 180 * 3.14159))
+                 int(center_coord[0]),
+                 int(center_coord[1])
              ),
-             (int(center_coord[0]), int(center_coord[1])),
+             (int(center_coord[0] - compass_size_edge * 0.7 * np.sin((angle + 180) / 180 * 3.14159)),
+              int(center_coord[1] + compass_size_edge * 0.7 * np.cos((angle + 180) / 180 * 3.14159))),
              (0, 0, 255), 2 + int(size_boundary[0] / 400))
 
-
-
-    # for k in range(12):
-    #
-    #     if k == 0 or k ==3 or k==6 or k ==9:
-    #         cv2.line(im_resized_copy,
-    #                  (
-    #                      int(center_coord[0] + compass_size_edge * 1.4 * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_edge * 1.4 * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (
-    #                      int(center_coord[0] + compass_size_center * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_center * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
-    #
-    #     else:
-    #         cv2.line(im_resized_copy,
-    #                  (
-    #                      int(center_coord[0] + compass_size_edge * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_edge * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (
-    #                      int(center_coord[0] + compass_size_center * np.sin((angle + k * 30) / 180 * 3.14159)),
-    #                      int(center_coord[1] - compass_size_center * np.cos((angle + k * 30) / 180 * 3.14159))
-    #                  ),
-    #                  (255, 255, 255), 1 + int(size_boundary[0] / 800))
-
-    cv2.putText(im_resized_copy, 'Forward direction', (int(center_coord[0]), int(center_coord[1])),
+    cv2.circle(im_resized_copy, (
+        int(center_coord[0]),
+        int(center_coord[1])
+    ),
+               color=(0, 0, 255), radius=4 + int(size_boundary[0] / 400), thickness=4 + int(size_boundary[0] / 400))
+    cv2.putText(im_resized_copy, 'Forward direction', (
+        int(center_coord[0] - compass_size_edge * np.sin((angle + 180) / 180 * 3.14159)),
+        int(center_coord[1] + compass_size_edge * np.cos((angle + 180) / 180 * 3.14159))
+    ),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.1 + size_boundary[0] / 1200, (0, 0, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
-    # angle_ = 0
-    # for k in range(4):
-    #     cv2.line(im_resized_copy, \
-    #              (
-    #                  int(center_coord[0] + compass_size_edge * np.sin((angle_ + k * 90) / 180 * 3.14159)),
-    #                  int(center_coord[1] - compass_size_edge * np.cos((angle_ + k * 90) / 180 * 3.14159))
-    #              ), \
-    #              (
-    #                  int(center_coord[0] + compass_size_center * np.sin((angle_ + k * 90) / 180 * 3.14159)),
-    #                  int(center_coord[1] - compass_size_center * np.cos((angle_ + k * 90) / 180 * 3.14159))
-    #              ), \
-    #              (255, 255, 255), 2 + int(size_boundary[0] / 400))
-    #
-    # cv2.putText(im_resized_copy, 'N', (int(center_coord[0] + compass_size * np.sin(angle_ / 180 * 3.14159) * 0.95),
-    #                          int(center_coord[1] - compass_size * np.cos(angle_ / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
-    #
-    # cv2.putText(im_resized_copy, 'E',
-    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 90) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle_ + 90) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
-    #
-    # cv2.putText(im_resized_copy, 'S',
-    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 180) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle_ + 180) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
-    #
-    # cv2.putText(im_resized_copy, 'W',
-    #             (int(center_coord[0] + compass_size * np.sin((angle_ + 270) / 180 * 3.14159)),
-    #              int(center_coord[1] - compass_size * np.cos((angle_ + 270) / 180 * 3.14159))),
-    #             cv2.FONT_HERSHEY_SIMPLEX,
-    #             0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
-
 
     cv2.putText(im_resized_copy, 'current view area', np.array(np.min(pos_list[-1],axis = 0),dtype=np.int32),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5 + size_boundary[0] / 1600, (255, 255, 255), 1 + int(size_boundary[0] / 500), cv2.LINE_AA)
 
-    # print(im_min_boundary[1],im_max_boundary[1], im_min_boundary[0],im_max_boundary[0])
 
-    # cv2.circle(im_resized_copy, gps_to_img_coords(destination_gps),
-    #            int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000), (255, 0, 255), 2)
 
     cv2.rectangle(im_resized_copy, gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][0]),
                   gps_to_img_coords(extracted_xview_landmarks[int(destination_index)][1][2]), (255, 0, 255), 2)
@@ -908,7 +853,7 @@ for iii in range(0 ,len(name_list)):
         [int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000),
          int(polygon_area(extracted_xview_landmarks[int(destination_index)][1]) * 30000)]), \
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.5 + size_boundary[0] / 800, (255, 0, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
+                0.5 + size_boundary[0] / 800, (255, 255, 255), 1 + int(size_boundary[0] / 300), cv2.LINE_AA)
 
     cv2.imwrite(root_folder_path + name_list[iii].replace('/0/', '/1/image_sample_') + '_1.jpg', im_resized_copy[int(im_min_boundary[1]):int(im_max_boundary[1]), int(im_min_boundary[0]):int(im_max_boundary[0])])
 

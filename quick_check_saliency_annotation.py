@@ -282,12 +282,14 @@ def autoAdjustments_with_convertScaleAbs(img):
 
     return new_img
 count_i = 0
-for q in range(155 ,len(name_list)):
+for q in range( 90 ,len(name_list)):
     iii = name_list[q]
+    # if iii != 1051:
+    #     continue
     for ii in sub_traj_id_to_idx[iii].keys():
         pos_list = []
         attention_list = []
-        for i in range(1, np.max(list(sub_traj_id_to_idx[iii][ii].keys())) + 1):
+        for i in range(1, np.max(list(sub_traj_id_to_idx[iii][ii].keys())) + 1): # starts from idx 1 because the sub-traj starts from 1
             p_dic = new_data[sub_traj_id_to_idx[iii][ii][i]]
             lng_ratio = p_dic['lng_ratio']
             lat_ratio = p_dic['lat_ratio']
@@ -295,8 +297,9 @@ for q in range(155 ,len(name_list)):
             gps_top_right = p_dic['gps_top_right']
             attention_list += p_dic['attention_list']
 
-        if os.path.exists(root_folder_path + str(iii) + '_' + str(ii) + '.pickle'):
-            attention_list = pickle.load(open(root_folder_path + str(iii) + '_' + str(ii) + '.pickle', 'rb'))
+        if os.path.exists(root_folder_path +'attention_check/' + str(iii) + '_' + str(ii) + '.pickle'):
+            print('exist!')
+            attention_list = pickle.load(open(root_folder_path + 'attention_check/' + str(iii) + '_' + str(ii) + '.pickle', 'rb'))
 
 
         for i in range(len(attention_list)):
